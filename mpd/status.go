@@ -67,5 +67,5 @@ func StatusFromAttrs(attr mpd.Attrs) (s Status, err error) {
 		s.NextSong = -1
 	}
 	s.Attrs = attr
-	return
+	return s, nil
 }
