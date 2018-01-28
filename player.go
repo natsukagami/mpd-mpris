@@ -3,6 +3,7 @@ package mpris
 import (
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/godbus/dbus"
@@ -51,7 +52,7 @@ const (
 
 // LoopStatus is a repeat / loop status.
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Enum:Loop_Status
-type LoopStatus string
+type LoopStatus = string
 
 // Defined LoopStatuses
 const (
@@ -83,6 +84,15 @@ func (p *Player) updateStatus() *dbus.Error {
 	case "stop":
 		playStatus = PlaybackStatusStopped
 	}
+	var loopStatus LoopStatus
+	switch {
+	case !status.Repeat:
+		loopStatus = LoopStatusNone
+	case !status.Single:
+		loopStatus = LoopStatusPlaylist
+	default:
+		loopStatus = LoopStatusTrack
+	}
 	song, err := p.mpd.CurrentSong()
 	if err != nil {
 		return transform(err)
@@ -91,6 +101,29 @@ func (p *Player) updateStatus() *dbus.Error {
 		return err
 	}
 	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "PlaybackStatus", dbus.MakeVariant(playStatus)); err != nil {
+		return err
+	}
+	if oldLoop, err := p.props.Get("org.mpris.MediaPlayer2.Player", "LoopStatus"); err == nil && oldLoop.Value().(string) != string(loopStatus) {
+		if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "LoopStatus", dbus.MakeVariant(string(loopStatus))); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	if oldShuffle, err := p.props.Get("org.mpris.MediaPlayer2.Player", "Shuffle"); err == nil && oldShuffle.Value().(bool) != status.Random {
+		if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Shuffle", dbus.MakeVariant(status.Random)); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	newVolume := math.Max(0, float64(status.Volume)/100.0)
+	if oldVolume, err := p.props.Get("org.mpris.MediaPlayer2.Player", "Volume"); err == nil && oldVolume.Value().(float64) != newVolume {
+
+		if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Volume", dbus.MakeVariant(newVolume)); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek))); err != nil {
@@ -152,6 +185,7 @@ func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 func (p *Player) properties() map[string]*prop.Prop {
 	status, err := p.mpd.Status()
 	if err != nil {
+		log.Fatalf("%+v", err)
 		panic(err)
 	}
 	var playStatus PlaybackStatus
@@ -160,7 +194,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 		playStatus = PlaybackStatusPlaying
 	case "pause":
 		playStatus = PlaybackStatusPaused
-	case "stop":
+	default:
 		playStatus = PlaybackStatusStopped
 	}
 	var loopStatus LoopStatus
@@ -182,7 +216,9 @@ func (p *Player) properties() map[string]*prop.Prop {
 		tick := time.NewTicker(time.Second / 10)
 		defer tick.Stop()
 		for range tick.C {
-			p.updateStatus()
+			if err := p.updateStatus(); err != nil {
+				log.Printf("%v\n", err)
+			}
 		}
 	}()
 
@@ -192,7 +228,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 		"Rate":           newProp(1.0, true, true, nil),
 		"Shuffle":        newProp(status.Random, true, true, p.OnShuffle),
 		"Metadata":       newProp(MapFromSong(song), true, true, nil),
-		"Volume":         newProp(float64(status.Volume)/100.0, true, true, p.OnVolume),
+		"Volume":         newProp(math.Max(0, float64(status.Volume)/100.0), true, true, p.OnVolume),
 		"Position": &prop.Prop{
 			Value:    UsFromDuration(status.Seek),
 			Writable: true,
@@ -314,5 +350,5 @@ func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
 		return err
 	}
 	// Unnatural seek, create signal
-	return transform(p.dbus.Emit("/org/mpris/MediaPlayer2", "Seeked", x))
+	return transform(p.dbus.Emit("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player.Seeked", x))
 }
