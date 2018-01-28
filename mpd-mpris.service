@@ -1,0 +1,8 @@
+[Unit]
+Description=mpd-mpris: An implementation of the MPRIS protocol for MPD
+
+[Service]
+ExecStart=/usr/bin/mpd-mpris
+
+[Install]
+WantedBy=default.target
