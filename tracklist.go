@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/godbus/dbus"
+
 	"github.com/natsukagami/mpd-mpris/mpd"
 )
 
 // TrackIDFormat is the formatter string for a track ID.
-const TrackIDFormat = "/org/mpris/MediaPlayer2/TrackList/%d"
+const TrackIDFormat = "/org/mpd/Tracks/%d"
 
 // This file implements a struct that satisfies the `org.mpris.MediaPlayer2.TrackList` interface.
 
@@ -31,17 +33,18 @@ func MapFromSong(s mpd.Song) MetadataMap {
 	if s.ID == -1 {
 		// No song
 		return MetadataMap{
-			"mpris:trackid": "/org/mpris/MediaPlayer2/TrackList/NoTrack",
+			"mpris:trackid": dbus.ObjectPath("/org/mpris/MediaPlayer2/TrackList/NoTrack"),
 		}
 	}
 	return MetadataMap{
-		"mpris:trackid":     fmt.Sprintf(TrackIDFormat, s.ID),
-		"mpris:length":      s.Duration / time.Microsecond,
-		"xesam:album":       s.Album,
-		"xesam:albumArtist": []string{s.AlbumArtist},
-		"xesam:artist":      []string{s.Artist},
-		"xesam:trackNumber": s.Track,
-		"xesam:genre":       []string{s.Genre},
-		"xesam:title":       s.Title,
+		"mpris:trackid":        dbus.ObjectPath(fmt.Sprintf(TrackIDFormat, s.ID)),
+		"mpris:length":         s.Duration / time.Microsecond,
+		"xesam:album":          s.Album,
+		"xesam:albumArtist":    []string{s.AlbumArtist},
+		"xesam:artist":         []string{s.Artist},
+		"xesam:trackNumber":    s.Track,
+		"xesam:genre":          []string{s.Genre},
+		"xesam:title":          s.Title,
+		"xesam:contentCreated": s.Date,
 	}
 }
