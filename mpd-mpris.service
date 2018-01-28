@@ -1,5 +1,7 @@
 [Unit]
 Description=mpd-mpris: An implementation of the MPRIS protocol for MPD
+Requires=mpd.service
+After=mpd.service
 
 [Service]
 ExecStart=/usr/bin/mpd-mpris
