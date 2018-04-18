@@ -126,10 +126,7 @@ func (p *Player) updateStatus() *dbus.Error {
 	} else if err != nil {
 		return err
 	}
-	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek))); err != nil {
-		return err
-	}
-	return nil
+	return p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
 }
 
 // OnLoopStatus handles LoopStatus change.

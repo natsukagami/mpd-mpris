@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/godbus/dbus/introspect"
+
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/prop"
 	"github.com/natsukagami/mpd-mpris/mpd"
@@ -23,9 +25,13 @@ func (ins *Instance) Close() {
 	ins.dbus.Close()
 }
 
+// Name returns the name of the instance.
+func (ins *Instance) Name() string {
+	return fmt.Sprintf("org.mpris.MediaPlayer2.mpd.instance%d", os.Getpid())
+}
+
 // NewInstance creates a new instance that takes care of the specified mpd.
 func NewInstance(mpd *mpd.Client) (ins *Instance, err error) {
-	// TODO: Unimplemented!
 	ins = &Instance{mpd: mpd}
 	if ins.dbus, err = dbus.SessionBus(); err != nil {
 		return nil, errors.WithStack(err)
@@ -37,12 +43,14 @@ func NewInstance(mpd *mpd.Client) (ins *Instance, err error) {
 	player := &Player{Instance: ins}
 	ins.dbus.Export(player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
 
+	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")
+
 	ins.props = prop.New(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
 		"org.mpris.MediaPlayer2":        mp2.properties(),
 		"org.mpris.MediaPlayer2.Player": player.properties(),
 	})
 
-	reply, err := ins.dbus.RequestName(fmt.Sprintf("org.mpris.MediaPlayer2.mpd.instance%d", os.Getpid()), dbus.NameFlagReplaceExisting)
+	reply, err := ins.dbus.RequestName(ins.Name(), dbus.NameFlagReplaceExisting)
 
 	if err != nil || reply != dbus.RequestNameReplyPrimaryOwner {
 		return nil, errors.WithStack(err)
