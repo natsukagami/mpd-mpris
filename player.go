@@ -103,6 +103,9 @@ func (p *Player) updateStatus() *dbus.Error {
 	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "PlaybackStatus", dbus.MakeVariant(playStatus)); err != nil {
 		return err
 	}
+	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "CanSeek", dbus.MakeVariant(status.Seekable)); err != nil {
+		return err
+	}
 	if oldLoop, err := p.props.Get("org.mpris.MediaPlayer2.Player", "LoopStatus"); err == nil && oldLoop.Value().(string) != string(loopStatus) {
 		if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "LoopStatus", dbus.MakeVariant(string(loopStatus))); err != nil {
 			return err
@@ -214,7 +217,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 		defer tick.Stop()
 		for range tick.C {
 			if err := p.updateStatus(); err != nil {
-				log.Printf("%v\n", err)
+				log.Printf("%+v\n", err)
 			}
 		}
 	}()
@@ -238,7 +241,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 		"CanGoPrevious": newProp(true, false, true, nil),
 		"CanPlay":       newProp(true, false, true, nil),
 		"CanPause":      newProp(true, false, true, nil),
-		"CanSeek":       newProp(true, false, true, nil),
+		"CanSeek":       newProp(status.Seekable, true, true, nil),
 		"CanControl":    newProp(true, false, true, nil),
 	}
 }
@@ -314,11 +317,16 @@ func (p *Player) PlayPause() *dbus.Error {
 // Seek seeks forward in the current track by the specified number of microseconds.
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Seek
 func (p *Player) Seek(x TimeInUs) *dbus.Error {
-	log.Printf("Seek(%v) requested\n", x.Duration())
 	status, err := p.mpd.Status()
 	if err != nil {
 		return transform(err)
 	}
+
+	if !status.Seekable {
+		return nil // Quit silently
+	}
+
+	log.Printf("Seek(%v) requested\n", x.Duration())
 	song, err := p.mpd.CurrentSong()
 	if err != nil {
 		return transform(err)
@@ -335,6 +343,15 @@ func (p *Player) Seek(x TimeInUs) *dbus.Error {
 // SetPosition sets the current track position in microseconds.
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:SetPosition
 func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
+	status, err := p.mpd.Status()
+	if err != nil {
+		return transform(err)
+	}
+
+	if !status.Seekable {
+		return nil // Quit silently
+	}
+
 	log.Printf("SetPosition(%v, %v) requested\n", o, x.Duration())
 	var id int
 	if _, err := fmt.Sscanf(string(o), TrackIDFormat, &id); err != nil {
