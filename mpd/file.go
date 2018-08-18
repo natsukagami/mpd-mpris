@@ -1,6 +1,7 @@
 package mpd
 
 import (
+	"math"
 	"strconv"
 	"time"
 
@@ -67,12 +68,17 @@ func FileFromAttrs(attr mpd.Attrs) (s File, err error) {
 		// No track information
 		s.Track = 0
 	}
-	var durationF float64
-	if durationF, err = strconv.ParseFloat(attr["duration"], 64); err != nil {
-		err = errors.Wrap(err, "Parse duration")
-		return
+	// Handle duration-less files, set duration to maximum possible
+	if d, ok := attr["duration"]; !ok || d == "" {
+		s.Duration = time.Duration(math.MaxInt64)
+	} else {
+		var durationF float64
+		if durationF, err = strconv.ParseFloat(d, 64); err != nil {
+			err = errors.Wrap(err, "Parse duration")
+			return
+		}
+		s.Duration = time.Duration(durationF * float64(time.Second))
 	}
-	s.Duration = time.Duration(durationF * float64(time.Second))
 	s.Attrs = attr
 	return
 }

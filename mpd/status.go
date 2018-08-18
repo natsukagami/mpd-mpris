@@ -1,6 +1,7 @@
 package mpd
 
 import (
+	"math"
 	"strconv"
 	"time"
 
@@ -15,12 +16,14 @@ type Status struct {
 	Random         bool
 	Single         bool
 	Consume        bool
-	PlaylistLength int
+	PlaylistLength time.Duration
 	State          string
 	Song           int
 	Seek           time.Duration
 	NextSong       int
 	Attrs          mpd.Attrs
+
+	Seekable bool // Whether we can seek the current song
 }
 
 func parseBoolFrom01(str string) (bool, error) {
@@ -53,11 +56,17 @@ func StatusFromAttrs(attr mpd.Attrs) (s Status, err error) {
 	}
 	if x, err := strconv.ParseFloat(attr["elapsed"], 64); err != nil {
 		s.Seek = 0
+		s.Seekable = false
 	} else {
 		s.Seek = time.Duration(x * float64(time.Second))
+		s.Seekable = true
 	}
-	if s.PlaylistLength, err = strconv.Atoi(attr["playlistlength"]); err != nil {
+	if p, ok := attr["playlistlength"]; !ok || p == "" {
+		s.PlaylistLength = time.Duration(math.MaxInt64)
+	} else if pl, err := strconv.Atoi(attr["playlistlength"]); err != nil {
 		return s, errors.WithStack(err)
+	} else {
+		s.PlaylistLength = time.Second * time.Duration(pl)
 	}
 	s.State = attr["state"]
 	if s.Song, err = strconv.Atoi(attr["songid"]); err != nil {
