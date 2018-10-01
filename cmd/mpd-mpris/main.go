@@ -13,12 +13,15 @@ var (
 	addr     string
 	port     int
 	password string
+
+	noInstance bool
 )
 
 func init() {
 	flag.StringVar(&addr, "host", "localhost", "The MPD host.")
 	flag.IntVar(&port, "port", 6600, "The MPD port")
 	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
+	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
 }
 
 func main() {
@@ -40,7 +43,12 @@ func main() {
 		panic(err)
 	}
 
-	instance, err := mpris.NewInstance(c)
+	opts := []mpris.Option{}
+	if noInstance {
+		opts = append(opts, mpris.NoInstance())
+	}
+
+	instance, err := mpris.NewInstance(c, opts...)
 
 	if err != nil {
 		panic(err)

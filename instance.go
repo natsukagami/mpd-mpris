@@ -18,6 +18,8 @@ type Instance struct {
 	mpd   *mpd.Client
 	dbus  *dbus.Conn
 	props *prop.Properties
+
+	name string
 }
 
 // Close ends the connection.
@@ -27,14 +29,23 @@ func (ins *Instance) Close() {
 
 // Name returns the name of the instance.
 func (ins *Instance) Name() string {
-	return fmt.Sprintf("org.mpris.MediaPlayer2.mpd.instance%d", os.Getpid())
+	return ins.name
 }
 
 // NewInstance creates a new instance that takes care of the specified mpd.
-func NewInstance(mpd *mpd.Client) (ins *Instance, err error) {
-	ins = &Instance{mpd: mpd}
+func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
+	ins = &Instance{
+		mpd: mpd,
+
+		name: fmt.Sprintf("org.mpris.MediaPlayer2.mpd.instance%d", os.Getpid()),
+	}
 	if ins.dbus, err = dbus.SessionBus(); err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(ins)
 	}
 
 	mp2 := &MediaPlayer2{Instance: ins}
