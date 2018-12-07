@@ -1,12 +1,9 @@
 package mpd
 
 import (
-	"math"
-	"strconv"
 	"time"
 
 	"github.com/fhs/gompd/mpd"
-	"github.com/pkg/errors"
 )
 
 // Status represents mpd's current status.
@@ -26,55 +23,41 @@ type Status struct {
 	Seekable bool // Whether we can seek the current song
 }
 
-func parseBoolFrom01(str string) (bool, error) {
-	switch str {
-	case "0":
-		return false, nil
-	case "1":
-		return true, nil
-	default:
-		return false, errors.New("Invalid value `" + str + "`, expected `0`/`1`")
-	}
-}
-
 // StatusFromAttrs returns a Status struct from the given attrs.
 func StatusFromAttrs(attr mpd.Attrs) (s Status, err error) {
-	if s.Volume, err = strconv.Atoi(attr["volume"]); err != nil {
-		return s, errors.WithStack(err)
-	}
-	if s.Repeat, err = parseBoolFrom01(attr["repeat"]); err != nil {
-		return s, err
-	}
-	if s.Random, err = parseBoolFrom01(attr["random"]); err != nil {
-		return s, err
-	}
-	if s.Single, err = parseBoolFrom01(attr["single"]); err != nil {
-		return s, err
-	}
-	if s.Consume, err = parseBoolFrom01(attr["consume"]); err != nil {
-		return s, err
-	}
-	if x, err := strconv.ParseFloat(attr["elapsed"], 64); err != nil {
-		s.Seek = 0
-		s.Seekable = false
-	} else {
+	p := &parseMap{m: attr}
+
+	p.Int("volume", &s.Volume, true)
+	p.Bool("repeat", &s.Repeat, true)
+	p.Bool("single", &s.Single, true)
+	p.Bool("random", &s.Random, true)
+	p.Bool("consume", &s.Consume, true)
+
+	{
+		var x float64
+		p.Float("elapsed", &x, true)
 		s.Seek = time.Duration(x * float64(time.Second))
-		s.Seekable = true
+
+		//? This is a guess, assuming any non-seekable content has 0 duration
+		s.Seekable = p.Float("duration", &x, true)
+		s.Seekable = s.Seekable && x != 0.0
 	}
-	if p, ok := attr["playlistlength"]; !ok || p == "" {
-		s.PlaylistLength = time.Duration(math.MaxInt64)
-	} else if pl, err := strconv.Atoi(attr["playlistlength"]); err != nil {
-		return s, errors.WithStack(err)
-	} else {
-		s.PlaylistLength = time.Second * time.Duration(pl)
+
+	{
+		var x int
+		p.Int("playlistlength", &x, true)
+		s.PlaylistLength = time.Duration(x) * time.Second
 	}
-	s.State = attr["state"]
-	if s.Song, err = strconv.Atoi(attr["songid"]); err != nil {
+
+	p.String("state", &s.State, true)
+	if !p.Int("songid", &s.Song, true) {
 		s.Song = -1
 	}
-	if s.NextSong, err = strconv.Atoi(attr["nextsongid"]); err != nil {
+	if !p.Int("nextsongid", &s.NextSong, true) {
 		s.NextSong = -1
 	}
+
+	err = p.Err
 	s.Attrs = attr
 	return s, nil
 }

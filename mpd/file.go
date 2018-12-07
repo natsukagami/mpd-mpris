@@ -1,8 +1,6 @@
 package mpd
 
 import (
-	"math"
-	"strconv"
 	"time"
 
 	"github.com/fhs/gompd/mpd"
@@ -32,7 +30,6 @@ func ItemFromAttrs(attr mpd.Attrs) (Item, error) {
 
 // File represents a music file.
 type File struct {
-	InLibrary   bool // Specifies whether the file is in the library
 	Title       string
 	Artist      string
 	Genre       string
@@ -40,8 +37,8 @@ type File struct {
 	Album       string
 	AlbumArtist string
 	Track       int
-	Duration    time.Duration // In miliseconds
-	Attrs       mpd.Attrs     // Other attributes
+	Duration    time.Duration
+	Attrs       mpd.Attrs // Other attributes
 }
 
 // Path returns the path to the file.
@@ -51,34 +48,28 @@ func (f File) Path() string {
 
 // FileFromAttrs returns a File from the attributes map.
 func FileFromAttrs(attr mpd.Attrs) (s File, err error) {
-	if title, ok := attr["Title"]; ok {
-		s.Title = title
-		s.InLibrary = true
-	} else {
-		s.InLibrary = false
-		return
+	p := &parseMap{m: attr}
+
+	if !p.String("Title", &s.Title, true) {
+		s.Title = "unknown title"
 	}
-	s.Artist = attr["Artist"]
-	s.Genre = attr["Genre"]
-	s.Date = attr["Date"]
-	s.Album = attr["Album"]
-	s.AlbumArtist = attr["AlbumArtist"]
-	if s.Track, err = strconv.Atoi(attr["Track"]); err != nil {
-		err = nil
-		// No track information
-		s.Track = 0
+	// All the following values can be empty
+	if !p.String("Artist", &s.Artist, true) {
+		s.Artist = "unknown artist"
 	}
-	// Handle duration-less files, set duration to maximum possible
-	if d, ok := attr["duration"]; !ok || d == "" {
-		s.Duration = time.Duration(math.MaxInt64)
-	} else {
-		var durationF float64
-		if durationF, err = strconv.ParseFloat(d, 64); err != nil {
-			err = errors.Wrap(err, "Parse duration")
-			return
-		}
-		s.Duration = time.Duration(durationF * float64(time.Second))
-	}
+	p.String("Genre", &s.Genre, true)
+	p.String("Date", &s.Date, true)
+	p.String("Album", &s.Album, true)
+	p.String("AlbumArtist", &s.AlbumArtist, true)
+
+	p.Int("Track", &s.Track, true)
+	// Handle duration-less files, set duration to 0 and do not convert it to a
+	// metadata field
+	durationF := 0.0
+	p.Float("duration", &durationF, true)
+	s.Duration = time.Duration(durationF * float64(time.Second))
+
+	err = p.Err
 	s.Attrs = attr
 	return
 }

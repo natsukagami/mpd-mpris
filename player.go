@@ -132,6 +132,10 @@ func (p *Player) updateStatus() *dbus.Error {
 	return p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
 }
 
+func notImplemented(c *prop.Change) *dbus.Error {
+	return dbus.MakeFailedError(errors.New("Not implemented"))
+}
+
 // OnLoopStatus handles LoopStatus change.
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Property:LoopStatus
 func (p *Player) OnLoopStatus(c *prop.Change) *dbus.Error {
@@ -225,7 +229,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 	return map[string]*prop.Prop{
 		"PlaybackStatus": newProp(playStatus, true, true, nil),
 		"LoopStatus":     newProp(loopStatus, true, true, p.OnLoopStatus),
-		"Rate":           newProp(1.0, true, true, nil),
+		"Rate":           newProp(1.0, true, true, notImplemented),
 		"Shuffle":        newProp(status.Random, true, true, p.OnShuffle),
 		"Metadata":       newProp(MapFromSong(song), true, true, nil),
 		"Volume":         newProp(math.Max(0, float64(status.Volume)/100.0), true, true, p.OnVolume),

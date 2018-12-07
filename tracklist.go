@@ -28,6 +28,24 @@ type URI string
 // https://specifications.freedesktop.org/mpris-spec/latest/Track_List_Interface.html#Mapping:Metadata_Map
 type MetadataMap map[string]interface{}
 
+func (m *MetadataMap) nonEmptyString(field, value string) {
+	if value != "" {
+		(*m)[field] = value
+	}
+}
+
+func (m *MetadataMap) nonEmptySlice(field string, values []string) {
+	toAdd := []string{}
+	for _, v := range values {
+		if v != "" {
+			toAdd = append(toAdd, v)
+		}
+	}
+	if len(toAdd) > 0 {
+		(*m)[field] = toAdd
+	}
+}
+
 // MapFromSong returns a MetadataMap from the Song struct in mpd.
 func MapFromSong(s mpd.Song) MetadataMap {
 	if s.ID == -1 {
@@ -36,15 +54,23 @@ func MapFromSong(s mpd.Song) MetadataMap {
 			"mpris:trackid": dbus.ObjectPath("/org/mpris/MediaPlayer2/TrackList/NoTrack"),
 		}
 	}
-	return MetadataMap{
-		"mpris:trackid":        dbus.ObjectPath(fmt.Sprintf(TrackIDFormat, s.ID)),
-		"mpris:length":         s.Duration / time.Microsecond,
-		"xesam:album":          s.Album,
-		"xesam:albumArtist":    []string{s.AlbumArtist},
-		"xesam:artist":         []string{s.Artist},
-		"xesam:trackNumber":    s.Track,
-		"xesam:genre":          []string{s.Genre},
-		"xesam:title":          s.Title,
-		"xesam:contentCreated": s.Date,
+
+	m := &MetadataMap{
+		"mpris:trackid": dbus.ObjectPath(fmt.Sprintf(TrackIDFormat, s.ID)),
+		"mpris:length":  s.Duration / time.Microsecond,
 	}
+
+	m.nonEmptyString("xesam:album", s.Album)
+	m.nonEmptyString("xesam:title", s.Title)
+	m.nonEmptyString("xesam:contentCreated", s.Date)
+	m.nonEmptySlice("xesam:albumArtist", []string{s.AlbumArtist})
+	m.nonEmptySlice("xesam:artist", []string{s.Artist})
+	m.nonEmptySlice("xesam:artist", []string{s.Artist})
+	m.nonEmptySlice("xesam:genre", []string{s.Genre})
+
+	if s.Track != 0 {
+		(*m)["xesam:trackNumber"] = s.Track
+	}
+
+	return *m
 }
