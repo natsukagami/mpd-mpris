@@ -16,11 +16,13 @@ Install scripts coming soon.
 
 ## Running
 
-```bash
-# mpd-mpris
+```
+# mpd-mpris --help
 Usage of mpd-mpris:
   -host string
         The MPD host. (default "localhost")
+  -no-instance
+        Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'
   -port int
         The MPD port (default 6600)
   -pwd string
@@ -32,10 +34,10 @@ to run and forget.
 
 ## Implementation Status
 
-* [x] Root Running
-* [x] Player control
-* [ ] Track list
-* [ ] Playlist support
+- [x] Root Running
+- [x] Player control
+- [ ] Track list
+- [ ] Playlist support
 
 ## License
 
