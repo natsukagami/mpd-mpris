@@ -4,7 +4,7 @@ Requires=mpd.service
 After=mpd.service
 
 [Service]
-ExecStart=/usr/bin/mpd-mpris
+ExecStart=/usr/bin/mpd-mpris -no-instance
 
 [Install]
 WantedBy=default.target
