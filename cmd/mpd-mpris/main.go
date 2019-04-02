@@ -33,9 +33,16 @@ func main() {
 		if len(env_host) == 0 {
 			addr = "localhost"
 		} else {
-			addr_pwd := strings.Split(env_host, "@")
-			password = addr_pwd[0]
-			addr = addr_pwd[1]
+			if strings.Index(env_host, "@") > -1 {
+				addr_pwd := strings.Split(env_host, "@")
+				// allow providing an alternative password on the command line
+				if len(password) == 0 {
+					password = addr_pwd[0]
+				}
+				addr = addr_pwd[1]
+			} else {
+				addr = env_host
+			}
 		}
 	}
 
