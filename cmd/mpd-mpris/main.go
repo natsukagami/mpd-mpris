@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	mpris "github.com/natsukagami/mpd-mpris"
 	"github.com/natsukagami/mpd-mpris/mpd"
@@ -18,7 +20,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&addr, "host", "localhost", "The MPD host.")
+	flag.StringVar(&addr, "host", "", "The MPD host (default localhost)")
 	flag.IntVar(&port, "port", 6600, "The MPD port")
 	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
@@ -26,6 +28,23 @@ func init() {
 
 func main() {
 	flag.Parse()
+	if len(addr) == 0 {
+		env_host := os.Getenv("MPD_HOST")
+		if len(env_host) == 0 {
+			addr = "localhost"
+		} else {
+			if strings.Index(env_host, "@") > -1 {
+				addr_pwd := strings.Split(env_host, "@")
+				// allow providing an alternative password on the command line
+				if len(password) == 0 {
+					password = addr_pwd[0]
+				}
+				addr = addr_pwd[1]
+			} else {
+				addr = env_host
+			}
+		}
+	}
 
 	// Attempt to create a MPD connection
 	var (
