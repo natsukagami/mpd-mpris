@@ -38,9 +38,6 @@ func main() {
 			addr = addr_pwd[1]
 		}
 	}
-	log.Println("addr is", addr)
-	log.Println("port is", port)
-	log.Println("password is", password)
 
 	// Attempt to create a MPD connection
 	var (
