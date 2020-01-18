@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	network  string
 	addr     string
 	port     int
 	password string
@@ -20,6 +21,7 @@ var (
 )
 
 func init() {
+	flag.StringVar(&network, "network", "tcp", "The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are tcp and unix). Default value is \"tcp\"")
 	flag.StringVar(&addr, "host", "", "The MPD host (default localhost)")
 	flag.IntVar(&port, "port", 6600, "The MPD port")
 	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
@@ -52,10 +54,19 @@ func main() {
 		err error
 	)
 
-	if password == "" {
-		c, err = mpd.Dial("tcp", fmt.Sprintf("%s:%d", addr, port))
+	// Parse the full address
+	// If network is tcp, then we would ideally want a port attached. Else we juts take "addr"
+	var fullAddress string
+	if network == "tcp" {
+		fullAddress = fmt.Sprintf("%s:%d", addr, port)
 	} else {
-		c, err = mpd.DialAuthenticated("tcp", fmt.Sprintf("%s:%d", addr, port), password)
+		fullAddress = addr
+	}
+
+	if password == "" {
+		c, err = mpd.Dial(network, fullAddress)
+	} else {
+		c, err = mpd.DialAuthenticated(network, fullAddress, password)
 	}
 
 	if err != nil {
