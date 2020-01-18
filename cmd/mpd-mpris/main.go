@@ -21,9 +21,9 @@ var (
 )
 
 func init() {
-	flag.StringVar(&network, "network", "tcp", "The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are tcp and unix). Default value is \"tcp\"")
+	flag.StringVar(&network, "network", "tcp", "The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are \"tcp\" and \"unix\")")
 	flag.StringVar(&addr, "host", "", "The MPD host (default localhost)")
-	flag.IntVar(&port, "port", 6600, "The MPD port")
+	flag.IntVar(&port, "port", 6600, "The MPD port. Only works if network is \"tcp\". If you use anything else, you should put the port inside addr yourself.")
 	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
 }
