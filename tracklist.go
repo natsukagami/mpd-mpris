@@ -62,12 +62,16 @@ func MapFromSong(s mpd.Song) MetadataMap {
 
 	m.nonEmptyString("xesam:album", s.Album)
 	m.nonEmptyString("xesam:title", s.Title)
-	m.nonEmptyString("xesam:url", s.Path())
+	m.nonEmptyString("xesam:url", s.Filepath)
 	m.nonEmptyString("xesam:contentCreated", s.Date)
 	m.nonEmptySlice("xesam:albumArtist", []string{s.AlbumArtist})
 	m.nonEmptySlice("xesam:artist", []string{s.Artist})
 	m.nonEmptySlice("xesam:artist", []string{s.Artist})
 	m.nonEmptySlice("xesam:genre", []string{s.Genre})
+
+	if artURI, ok := s.AlbumArtURI(); ok {
+		(*m)["mpris:artUrl"] = artURI
+	}
 
 	if s.Track != 0 {
 		(*m)["xesam:trackNumber"] = s.Track
