@@ -1,6 +1,8 @@
 package mpd
 
 import (
+	"net/url"
+	"path/filepath"
 	"time"
 
 	"github.com/fhs/gompd/v2/mpd"
@@ -15,9 +17,9 @@ type Item interface {
 }
 
 // ItemFromAttrs returns an Item from the given Attr struct.
-func ItemFromAttrs(attr mpd.Attrs) (Item, error) {
+func (c *Client) ItemFromAttrs(attr mpd.Attrs) (Item, error) {
 	if _, ok := attr["file"]; ok {
-		return FileFromAttrs(attr)
+		return c.FileFromAttrs(attr)
 	}
 	if _, ok := attr["directory"]; ok {
 		return Directory{Attrs: attr}, nil
@@ -38,6 +40,7 @@ type File struct {
 	AlbumArtist string
 	Track       int
 	Duration    time.Duration
+	Filepath    string    // The file:// URL
 	Attrs       mpd.Attrs // Other attributes
 }
 
@@ -47,8 +50,14 @@ func (f File) Path() string {
 }
 
 // FileFromAttrs returns a File from the attributes map.
-func FileFromAttrs(attr mpd.Attrs) (s File, err error) {
+func (c *Client) FileFromAttrs(attr mpd.Attrs) (s File, err error) {
 	p := &parseMap{m: attr}
+
+	if c.MusicDirectory != "" {
+		p.String("file", &s.Filepath, false)
+		filepath := url.URL{Scheme: "file", Path: filepath.Join(c.MusicDirectory, s.Filepath)}
+		s.Filepath = filepath.String()
+	}
 
 	if !p.String("Title", &s.Title, true) {
 		s.Title = "unknown title"

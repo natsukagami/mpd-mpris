@@ -35,7 +35,7 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 		s.ID = -1
 		return s, nil
 	}
-	if s.File, err = FileFromAttrs(attr); err != nil {
+	if s.File, err = c.FileFromAttrs(attr); err != nil {
 		return
 	}
 

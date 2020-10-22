@@ -11,10 +11,20 @@ import (
 // Some of the methods are overriden from the `mpd.Client` struct to provide typings safety.
 type Client struct {
 	*mpd.Client
-	Address string
+	Address        string
+	MusicDirectory string
 
 	lastSongMu sync.Mutex
 	lastSong   *Song
+}
+
+func (c *Client) init() error {
+	// Find the music directory
+	conf, err := c.Command("config").Attrs()
+	if err == nil {
+		c.MusicDirectory = conf["music_directory"]
+	}
+	return nil
 }
 
 // Dial connects to MPD listening on address addr (e.g. "127.0.0.1:6600") on network network (e.g. "tcp").
@@ -23,7 +33,11 @@ func Dial(network, addr string) (*Client, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &Client{Client: c, Address: addr}, nil
+	client := &Client{Client: c, Address: addr}
+	if err := client.init(); err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 // DialAuthenticated connects to MPD listening on address addr (e.g. "127.0.0.1:6600") on network network (e.g. "tcp").
@@ -33,7 +47,11 @@ func DialAuthenticated(network, addr, password string) (*Client, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &Client{Client: c, Address: addr}, nil
+	client := &Client{Client: c, Address: addr}
+	if err := client.init(); err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 // CurrentSong returns information about the current song in the playlist.
@@ -70,7 +88,7 @@ func (c *Client) Find(args ...string) ([]File, error) {
 	}
 	arr := make([]File, len(a))
 	for id, item := range a {
-		if arr[id], err = FileFromAttrs(item); err != nil {
+		if arr[id], err = c.FileFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
@@ -86,7 +104,7 @@ func (c *Client) ListAllInfo(uri string) ([]Item, error) {
 	}
 	arr := make([]Item, len(a))
 	for id, item := range a {
-		if arr[id], err = ItemFromAttrs(item); err != nil {
+		if arr[id], err = c.ItemFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
@@ -101,7 +119,7 @@ func (c *Client) ListInfo(uri string) ([]Item, error) {
 	}
 	arr := make([]Item, len(a))
 	for id, item := range a {
-		if arr[id], err = ItemFromAttrs(item); err != nil {
+		if arr[id], err = c.ItemFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
@@ -129,7 +147,7 @@ func (c *Client) PlaylistContents(name string) ([]File, error) {
 	}
 	arr := make([]File, len(a))
 	for id, item := range a {
-		if arr[id], err = FileFromAttrs(item); err != nil {
+		if arr[id], err = c.FileFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
@@ -147,7 +165,7 @@ func (c *Client) PlaylistInfo(start, end int) ([]File, error) {
 	}
 	arr := make([]File, len(a))
 	for id, item := range a {
-		if arr[id], err = FileFromAttrs(item); err != nil {
+		if arr[id], err = c.FileFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
