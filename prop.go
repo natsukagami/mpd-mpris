@@ -1,8 +1,8 @@
 package mpris
 
 import (
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/prop"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/prop"
 )
 
 func newProp(value interface{}, write bool, emitValue bool, cb func(*prop.Change) *dbus.Error) *prop.Prop {

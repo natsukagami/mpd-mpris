@@ -1,7 +1,7 @@
 package mpris
 
 import (
-	introspect "github.com/godbus/dbus/introspect"
+	introspect "github.com/godbus/dbus/v5/introspect"
 )
 
 // IntrospectNode returns the root node of the library's introspection output.

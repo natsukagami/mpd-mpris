@@ -3,8 +3,8 @@ package mpris
 import (
 	"fmt"
 
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/prop"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/prop"
 )
 
 // This file implements a struct that satisfies the `org.mpris.MediaPlayer2` interface.
