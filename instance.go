@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/godbus/dbus/introspect"
+	"github.com/godbus/dbus/v5/introspect"
 
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/prop"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/prop"
 	"github.com/natsukagami/mpd-mpris/mpd"
 	"github.com/pkg/errors"
 )
