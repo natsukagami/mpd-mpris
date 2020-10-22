@@ -1,6 +1,8 @@
 package mpd
 
 import (
+	"sync"
+
 	"github.com/fhs/gompd/v2/mpd"
 	"github.com/pkg/errors"
 )
@@ -10,6 +12,9 @@ import (
 type Client struct {
 	*mpd.Client
 	Address string
+
+	lastSongMu sync.Mutex
+	lastSong   *Song
 }
 
 // Dial connects to MPD listening on address addr (e.g. "127.0.0.1:6600") on network network (e.g. "tcp").
@@ -37,7 +42,18 @@ func (c *Client) CurrentSong() (Song, error) {
 	if e != nil {
 		return Song{}, errors.WithStack(e)
 	}
-	return SongFromAttrs(a)
+	c.lastSongMu.Lock()
+	defer c.lastSongMu.Unlock()
+	if c.lastSong != nil && c.lastSong.Path() == a["file"] {
+		// Heuristically, we have... the same song...
+		return *c.lastSong, nil
+	}
+	song, err := c.SongFromAttrs(a)
+	if err != nil {
+		return Song{}, err
+	}
+	c.lastSong = &song
+	return *c.lastSong, nil
 }
 
 // Find searches the library for songs and returns attributes for each matching song.

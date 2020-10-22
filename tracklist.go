@@ -69,6 +69,10 @@ func MapFromSong(s mpd.Song) MetadataMap {
 	m.nonEmptySlice("xesam:artist", []string{s.Artist})
 	m.nonEmptySlice("xesam:genre", []string{s.Genre})
 
+	if artURI, ok := s.AlbumArtURI(); ok {
+		(*m)["mpris:artUrl"] = artURI
+	}
+
 	if s.Track != 0 {
 		(*m)["xesam:trackNumber"] = s.Track
 	}
