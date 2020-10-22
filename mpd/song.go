@@ -16,13 +16,13 @@ var albumArtURI string
 
 func init() {
 	mpdTemp := filepath.Join(os.TempDir(), "mpd_mpris")
-	if err := os.MkdirAll(mpdTemp, 0x644); err != nil {
-		log.Println("Cannot create temp file for album art, we don't support them then!")
+	if err := os.MkdirAll(mpdTemp, 0777); err != nil {
+		log.Println("Cannot create temp file for album art, we don't support them then!", err)
 		return
 	}
 	f, err := ioutil.TempFile(mpdTemp, "artwork_")
 	if err != nil {
-		log.Println("Cannot create temp file for album art, we don't support them then!")
+		log.Println("Cannot create temp file for album art, we don't support them then!", err)
 		return
 	}
 	albumArtURI = f.Name()
@@ -47,21 +47,23 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 		return
 	}
 
-	// Attempt to load the album art.
-	albumArtLock.Lock()
-	defer albumArtLock.Unlock()
+	if albumArtURI != "" {
+		// Attempt to load the album art.
+		albumArtLock.Lock()
+		defer albumArtLock.Unlock()
 
-	// Write the album art to it
-	art, err := c.AlbumArt(s.Path())
-	if err != nil {
-		log.Println(err)
-		return s, nil
+		// Write the album art to it
+		art, err := c.AlbumArt(s.Path())
+		if err != nil {
+			log.Println(err)
+			return s, nil
+		}
+		if err := ioutil.WriteFile(albumArtURI, art, 0x644); err != nil {
+			log.Println(err)
+			return s, nil
+		}
+		s.albumArt = true
 	}
-	if err := ioutil.WriteFile(albumArtURI, art, 0x644); err != nil {
-		log.Println(err)
-		return s, nil
-	}
-	s.albumArt = true
 
 	return
 }
