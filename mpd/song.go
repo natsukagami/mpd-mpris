@@ -3,7 +3,7 @@ package mpd
 import (
 	"strconv"
 
-	"github.com/fhs/gompd/mpd"
+	"github.com/fhs/gompd/v2/mpd"
 )
 
 // Song represents a music file with metadata.

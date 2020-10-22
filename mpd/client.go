@@ -1,7 +1,7 @@
 package mpd
 
 import (
-	"github.com/fhs/gompd/mpd"
+	"github.com/fhs/gompd/v2/mpd"
 	"github.com/pkg/errors"
 )
 
