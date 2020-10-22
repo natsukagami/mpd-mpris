@@ -66,6 +66,5 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 	if err != nil || reply != dbus.RequestNameReplyPrimaryOwner {
 		return nil, errors.WithStack(err)
 	}
-
 	return
 }

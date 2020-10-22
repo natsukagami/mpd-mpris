@@ -63,17 +63,10 @@ const (
 
 // ============================================================================
 
-func transform(err error) *dbus.Error {
-	if err != nil {
-		return dbus.MakeFailedError(errors.WithStack(err))
-	}
-	return nil
-}
-
 func (p *Player) updateStatus() *dbus.Error {
 	status, err := p.mpd.Status()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	var playStatus PlaybackStatus
 	switch status.State {
@@ -95,7 +88,7 @@ func (p *Player) updateStatus() *dbus.Error {
 	}
 	song, err := p.mpd.CurrentSong()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	if err := p.Instance.props.Set("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(MapFromSong(song))); err != nil {
 		return err
@@ -144,27 +137,27 @@ func (p *Player) OnLoopStatus(c *prop.Change) *dbus.Error {
 	switch loop {
 	case LoopStatusNone:
 		if err := p.mpd.Single(false); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 		if err := p.mpd.Repeat(false); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 	case LoopStatusPlaylist:
 		if err := p.mpd.Single(false); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 		if err := p.mpd.Repeat(true); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 	case LoopStatusTrack:
 		if err := p.mpd.Single(true); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 		if err := p.mpd.Repeat(true); err != nil {
-			return transform(err)
+			return p.transformErr(err)
 		}
 	default:
-		return transform(errors.New("Invalid loop " + string(loop)))
+		return p.transformErr(errors.New("Invalid loop " + string(loop)))
 	}
 	return nil
 }
@@ -176,14 +169,14 @@ func (p *Player) OnVolume(c *prop.Change) *dbus.Error {
 	if val < 0 {
 		val = 0
 	}
-	return transform(p.mpd.SetVolume(val))
+	return p.transformErr(p.mpd.SetVolume(val))
 }
 
 // OnShuffle handles Shuffle change.
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Property:Shuffle
 func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 	log.Printf("Shuffle changed to %v\n", c.Value.(bool))
-	return transform(p.mpd.Random(c.Value.(bool)))
+	return p.transformErr(p.mpd.Random(c.Value.(bool)))
 }
 
 func (p *Player) properties() map[string]*prop.Prop {
@@ -256,7 +249,7 @@ func (p *Player) properties() map[string]*prop.Prop {
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Next
 func (p *Player) Next() *dbus.Error {
 	log.Printf("Next requested\n")
-	if err := transform(p.Instance.mpd.Next()); err != nil {
+	if err := p.transformErr(p.Instance.mpd.Next()); err != nil {
 		return err
 	}
 	return p.updateStatus()
@@ -266,7 +259,7 @@ func (p *Player) Next() *dbus.Error {
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Previous
 func (p *Player) Previous() *dbus.Error {
 	log.Printf("Previous requested\n")
-	if err := transform(p.Instance.mpd.Previous()); err != nil {
+	if err := p.transformErr(p.Instance.mpd.Previous()); err != nil {
 		return err
 	}
 	return p.updateStatus()
@@ -276,7 +269,7 @@ func (p *Player) Previous() *dbus.Error {
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Pause
 func (p *Player) Pause() *dbus.Error {
 	log.Printf("Pause requested\n")
-	if err := transform(p.Instance.mpd.Pause(true)); err != nil {
+	if err := p.transformErr(p.Instance.mpd.Pause(true)); err != nil {
 		return err
 	}
 	return p.updateStatus()
@@ -286,7 +279,7 @@ func (p *Player) Pause() *dbus.Error {
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Play
 func (p *Player) Play() *dbus.Error {
 	log.Printf("Play requested\n")
-	if err := transform(p.Instance.mpd.Play(-1)); err != nil {
+	if err := p.transformErr(p.Instance.mpd.Play(-1)); err != nil {
 		return err
 	}
 	return p.updateStatus()
@@ -296,7 +289,7 @@ func (p *Player) Play() *dbus.Error {
 // https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html#Method:Stop
 func (p *Player) Stop() *dbus.Error {
 	log.Printf("Stop requested\n")
-	if err := transform(p.Instance.mpd.Stop()); err != nil {
+	if err := p.transformErr(p.Instance.mpd.Stop()); err != nil {
 		return err
 	}
 	return p.updateStatus()
@@ -310,7 +303,7 @@ func (p *Player) PlayPause() *dbus.Error {
 	log.Printf("Play/Pause requested. Switching context...\n")
 	status, err := p.mpd.Status()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	if status.State == "play" {
 		return p.Pause()
@@ -323,7 +316,7 @@ func (p *Player) PlayPause() *dbus.Error {
 func (p *Player) Seek(x TimeInUs) *dbus.Error {
 	status, err := p.mpd.Status()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 
 	if !status.Seekable {
@@ -333,7 +326,7 @@ func (p *Player) Seek(x TimeInUs) *dbus.Error {
 	log.Printf("Seek(%v) requested\n", x.Duration())
 	song, err := p.mpd.CurrentSong()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	if status.Seek+x.Duration() < 0 {
 		return p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), 0)
@@ -349,7 +342,7 @@ func (p *Player) Seek(x TimeInUs) *dbus.Error {
 func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
 	status, err := p.mpd.Status()
 	if err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 
 	if !status.Seekable {
@@ -359,14 +352,14 @@ func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
 	log.Printf("SetPosition(%v, %v) requested\n", o, x.Duration())
 	var id int
 	if _, err := fmt.Sscanf(string(o), TrackIDFormat, &id); err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	if err := p.mpd.SeekID(id, int(x.Duration()/time.Second)); err != nil {
-		return transform(err)
+		return p.transformErr(err)
 	}
 	if err := p.updateStatus(); err != nil {
 		return err
 	}
 	// Unnatural seek, create signal
-	return transform(p.dbus.Emit("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player.Seeked", x))
+	return p.transformErr(p.dbus.Emit("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player.Seeked", x))
 }
