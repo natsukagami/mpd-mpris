@@ -3,7 +3,7 @@ package mpd
 import (
 	"time"
 
-	"github.com/fhs/gompd/mpd"
+	"github.com/fhs/gompd/v2/mpd"
 )
 
 // Stats stores statistics of the mpd instance.
