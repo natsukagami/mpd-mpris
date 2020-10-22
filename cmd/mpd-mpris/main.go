@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	mpris "github.com/natsukagami/mpd-mpris"
@@ -28,12 +29,26 @@ func init() {
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
 }
 
+func detectLocalSocket() {
+	runtimeDir, ok := os.LookupEnv("XDG_RUNTIME_DIR")
+	if !ok {
+		return
+	}
+	mpdSocket := filepath.Join(runtimeDir, "mpd/socket")
+	if _, err := os.Stat(mpdSocket); err == nil {
+		log.Println("local mpd socket found. using that!")
+		network = "unix"
+		addr = mpdSocket
+	}
+}
+
 func main() {
 	flag.Parse()
 	if len(addr) == 0 {
 		env_host := os.Getenv("MPD_HOST")
 		if len(env_host) == 0 {
 			addr = "localhost"
+			detectLocalSocket()
 		} else {
 			if strings.Index(env_host, "@") > -1 {
 				addr_pwd := strings.Split(env_host, "@")
