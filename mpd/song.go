@@ -3,6 +3,8 @@ package mpd
 import (
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -13,9 +15,15 @@ var albumArtLock sync.Mutex
 var albumArtURI string
 
 func init() {
-	f, err := ioutil.TempFile("", "mpd_mpris_artwork_")
+	mpdTemp := filepath.Join(os.TempDir(), "mpd_mpris")
+	if err := os.MkdirAll(mpdTemp, 0x644); err != nil {
+		log.Println("Cannot create temp file for album art, we don't support them then!")
+		return
+	}
+	f, err := ioutil.TempFile(mpdTemp, "artwork_")
 	if err != nil {
 		log.Println("Cannot create temp file for album art, we don't support them then!")
+		return
 	}
 	albumArtURI = f.Name()
 	f.Close()
