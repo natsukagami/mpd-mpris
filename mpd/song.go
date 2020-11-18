@@ -37,6 +37,14 @@ type Song struct {
 	albumArt bool // Whether the song has an album art. The album art will be loaded into memory at AlbumArtURI.
 }
 
+// SameAs checks if both songs are the same.
+func (s *Song) SameAs(other *Song) bool {
+	if other == nil || s == nil {
+		return s == nil && other == nil
+	}
+	return s.ID == other.ID && s.Path() == other.Path()
+}
+
 // SongFromAttrs returns a song from the attributes map.
 func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 	if s.ID, err = strconv.Atoi(attr["Id"]); err != nil {
