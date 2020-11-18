@@ -16,13 +16,13 @@ type MediaPlayer2 struct {
 
 func (m *MediaPlayer2) properties() map[string]*prop.Prop {
 	return map[string]*prop.Prop{
-		"CanQuit":      newProp(false, false, true, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanQuit
-		"CanRaise":     newProp(false, false, true, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
-		"HasTrackList": newProp(false, false, true, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
-		"Identity":     newProp(fmt.Sprintf("MPD on %s", m.Instance.mpd.Address), false, true, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
+		"CanQuit":      newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanQuit
+		"CanRaise":     newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
+		"HasTrackList": newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
+		"Identity":     newProp(fmt.Sprintf("MPD on %s", m.Instance.mpd.Address), nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
 		// Empty because we can't add arbitary files in...
-		"SupportedUriSchemes": newProp([]string{}, false, true, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedUriSchemes
-		"SupportedMimeTypes":  newProp([]string{}, false, true, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedMimeTypes
+		"SupportedUriSchemes": newProp([]string{}, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedUriSchemes
+		"SupportedMimeTypes":  newProp([]string{}, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedMimeTypes
 	}
 }
 

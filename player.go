@@ -220,26 +220,21 @@ func (p *Player) properties() map[string]*prop.Prop {
 	}()
 
 	return map[string]*prop.Prop{
-		"PlaybackStatus": newProp(playStatus, true, true, nil),
-		"LoopStatus":     newProp(loopStatus, true, true, p.OnLoopStatus),
-		"Rate":           newProp(1.0, true, true, notImplemented),
-		"Shuffle":        newProp(status.Random, true, true, p.OnShuffle),
-		"Metadata":       newProp(MapFromSong(song), true, true, nil),
-		"Volume":         newProp(math.Max(0, float64(status.Volume)/100.0), true, true, p.OnVolume),
-		"Position": &prop.Prop{
-			Value:    UsFromDuration(status.Seek),
-			Writable: true,
-			Emit:     prop.EmitFalse,
-			Callback: nil,
-		},
-		"MinimumRate":   newProp(1.0, false, true, nil),
-		"MaximumRate":   newProp(1.0, false, true, nil),
-		"CanGoNext":     newProp(true, false, true, nil),
-		"CanGoPrevious": newProp(true, false, true, nil),
-		"CanPlay":       newProp(true, false, true, nil),
-		"CanPause":      newProp(true, false, true, nil),
-		"CanSeek":       newProp(status.Seekable, true, true, nil),
-		"CanControl":    newProp(true, false, true, nil),
+		"PlaybackStatus": newProp(playStatus, nil),
+		"LoopStatus":     newProp(loopStatus, p.OnLoopStatus),
+		"Rate":           newProp(1.0, notImplemented),
+		"Shuffle":        newProp(status.Random, p.OnShuffle),
+		"Metadata":       newProp(MapFromSong(song), nil),
+		"Volume":         newProp(math.Max(0, float64(status.Volume)/100.0), p.OnVolume),
+		"Position":       newProp(UsFromDuration(status.Seek), nil),
+		"MinimumRate":    newProp(1.0, nil),
+		"MaximumRate":    newProp(1.0, nil),
+		"CanGoNext":      newProp(true, nil),
+		"CanGoPrevious":  newProp(true, nil),
+		"CanPlay":        newProp(true, nil),
+		"CanPause":       newProp(true, nil),
+		"CanSeek":        newProp(status.Seekable, nil),
+		"CanControl":     newProp(true, nil),
 	}
 }
 
