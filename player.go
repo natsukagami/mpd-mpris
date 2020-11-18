@@ -143,6 +143,7 @@ func (s *Status) Update(p *Player) *dbus.Error {
 		return p.transformErr(err)
 	}
 	if !song.SameAs(&s.CurrentSong) {
+		s.CurrentSong = song
 		go p.setProp("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(MapFromSong(song)))
 	}
 
