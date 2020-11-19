@@ -5,17 +5,12 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 )
 
-func newProp(value interface{}, write bool, emitValue bool, cb func(*prop.Change) *dbus.Error) *prop.Prop {
-	var emitFlag prop.EmitType
-	if emitValue {
-		emitFlag = prop.EmitTrue
-	} else {
-		emitFlag = prop.EmitInvalidates
-	}
+// Creates a new property.
+func newProp(value interface{}, cb func(*prop.Change) *dbus.Error) *prop.Prop {
 	return &prop.Prop{
 		Value:    value,
-		Writable: write,
-		Emit:     emitFlag,
+		Writable: true,
+		Emit:     prop.EmitTrue,
 		Callback: cb,
 	}
 }

@@ -52,13 +52,14 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 	ins.dbus.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
 
 	player := &Player{Instance: ins}
+	player.createStatus()
 	ins.dbus.Export(player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
 
 	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")
 
 	ins.props = prop.New(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
 		"org.mpris.MediaPlayer2":        mp2.properties(),
-		"org.mpris.MediaPlayer2.Player": player.properties(),
+		"org.mpris.MediaPlayer2.Player": player.props,
 	})
 
 	reply, err := ins.dbus.RequestName(ins.Name(), dbus.NameFlagReplaceExisting)
