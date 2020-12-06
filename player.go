@@ -200,7 +200,7 @@ func (p *Player) OnLoopStatus(c *prop.Change) *dbus.Error {
 
 // OnVolume handles volume changes.
 func (p *Player) OnVolume(c *prop.Change) *dbus.Error {
-	val := int(c.Value.(float64) * 100)
+	val := int(math.Round(c.Value.(float64) * 100))
 	log.Printf("Volume changed to %v\n", val)
 	p.status.mu.Lock()
 	defer p.status.mu.Unlock()
