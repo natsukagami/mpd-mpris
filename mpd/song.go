@@ -61,7 +61,7 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 		defer albumArtLock.Unlock()
 
 		// Write the album art to it
-		art, err := c.AlbumArt(s.Path())
+		art, err := c.getAlbumArt(s.Path())
 		if err != nil {
 			log.Println(err)
 			return s, nil
@@ -74,6 +74,36 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 	}
 
 	return
+}
+
+// Get a song's album art, first by trying readpicture, then try albumart.
+func (c *Client) getAlbumArt(uri string) ([]byte, error) {
+	if art, err := c.readPicture(uri); err == nil {
+		return art, nil
+	}
+	return c.AlbumArt(uri)
+}
+
+// readPicture retrieves an album artwork image for a song with the given URI using MPD's readpicture command.
+// Pretty much the same as `c.AlbumArt`.
+func (c *Client) readPicture(uri string) ([]byte, error) {
+	offset := 0
+	var data []byte
+	for {
+		// Read the data in chunks
+		chunk, size, err := c.Command("readpicture %s %d", uri, offset).Binary()
+		if err != nil {
+			return nil, err
+		}
+
+		// Accumulate the data
+		data = append(data, chunk...)
+		offset = len(data)
+		if offset >= size {
+			break
+		}
+	}
+	return data, nil
 }
 
 // AlbumArtURI returns the URI to the album art, if it is available.
