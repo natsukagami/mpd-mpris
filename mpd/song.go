@@ -12,21 +12,27 @@ import (
 )
 
 var albumArtLock sync.Mutex
-var albumArtURI string
+var (
+	mpdTemp     string // Temp folder location
+	albumArtURI string
+)
 
 func init() {
-	mpdTemp := filepath.Join(os.TempDir(), "mpd_mpris")
+	mpdTemp = filepath.Join(os.TempDir(), "mpd_mpris")
 	if err := os.MkdirAll(mpdTemp, 0777); err != nil {
 		log.Println("Cannot create temp file for album art, we don't support them then!", err)
 		return
 	}
+}
+
+func newTempFile() string {
 	f, err := ioutil.TempFile(mpdTemp, "artwork_")
 	if err != nil {
 		log.Println("Cannot create temp file for album art, we don't support them then!", err)
-		return
+		return ""
 	}
-	albumArtURI = f.Name()
-	f.Close()
+	defer f.Close()
+	return f.Name()
 }
 
 // Song represents a music file with metadata.
@@ -55,11 +61,16 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 		return
 	}
 
-	if albumArtURI != "" {
-		// Attempt to load the album art.
-		albumArtLock.Lock()
-		defer albumArtLock.Unlock()
+	// Attempt to load the album art.
+	albumArtLock.Lock()
+	defer albumArtLock.Unlock()
 
+	if albumArtURI != "" {
+		// delete the old album art file
+		os.Remove(albumArtURI)
+	}
+	albumArtURI = newTempFile()
+	if albumArtURI != "" {
 		// Write the album art to it
 		art, err := c.getAlbumArt(s.Path())
 		if err != nil {
