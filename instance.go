@@ -3,6 +3,7 @@ package mpris
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/godbus/dbus/v5/introspect"
 
@@ -33,7 +34,7 @@ func (ins *Instance) Name() string {
 }
 
 // NewInstance creates a new instance that takes care of the specified mpd.
-func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
+func NewInstance(mpd *mpd.Client, interval time.Duration, opts ...Option) (ins *Instance, err error) {
 	ins = &Instance{
 		mpd: mpd,
 
@@ -52,7 +53,7 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 	ins.dbus.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
 
 	player := &Player{Instance: ins}
-	player.createStatus()
+	player.createStatus(interval)
 	ins.dbus.Export(player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
 
 	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")

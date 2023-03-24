@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	mpris "github.com/natsukagami/mpd-mpris"
 	"github.com/natsukagami/mpd-mpris/mpd"
@@ -19,6 +20,7 @@ var (
 	password string
 
 	noInstance bool
+	interval   time.Duration
 )
 
 func init() {
@@ -27,6 +29,7 @@ func init() {
 	flag.IntVar(&port, "port", 6600, "The MPD port. Only works if network is \"tcp\". If you use anything else, you should put the port inside addr yourself.")
 	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
+	flag.DurationVar(&interval, "interval", time.Second, "How often to update the current song position. Set to 0 to never update the current song position.")
 }
 
 func detectLocalSocket() {
@@ -93,7 +96,7 @@ func main() {
 		opts = append(opts, mpris.NoInstance())
 	}
 
-	instance, err := mpris.NewInstance(c, opts...)
+	instance, err := mpris.NewInstance(c, interval, opts...)
 
 	if err != nil {
 		panic(err)

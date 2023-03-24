@@ -221,7 +221,7 @@ func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 	return p.transformErr(p.mpd.Random(c.Value.(bool)))
 }
 
-func (p *Player) createStatus() {
+func (p *Player) createStatus(interval time.Duration) {
 	status, err := p.mpd.Status()
 	if err != nil {
 		log.Fatalf("%+v", err)
@@ -261,15 +261,17 @@ func (p *Player) createStatus() {
 	}
 
 	// Set up a position updater
-	go func() {
-		tick := time.NewTicker(time.Second / 10)
-		defer tick.Stop()
-		for range tick.C {
-			if err := p.status.Update(p); err != nil {
-				log.Printf("%+v\n", err)
+	if interval > 0 {
+		go func() {
+			tick := time.NewTicker(interval)
+			defer tick.Stop()
+			for range tick.C {
+				if err := p.status.Update(p); err != nil {
+					log.Printf("%+v\n", err)
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	p.props = map[string]*prop.Prop{
 		"PlaybackStatus": newProp(playStatus, nil),
