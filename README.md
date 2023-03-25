@@ -20,12 +20,14 @@ Install scripts coming soon.
 # mpd-mpris --help
   -host string
     	The MPD host (default localhost)
+  -instance-name string
+    	Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd.{instance-name}'
   -interval duration
     	How often to update the current song position. Set to 0 to never update the current song position. (default 1s)
   -network string
     	The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are "tcp" and "unix") (default "tcp")
   -no-instance
-    	Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'
+    	Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'
   -port int
     	The MPD port. Only works if network is "tcp". If you use anything else, you should put the port inside addr yourself. (default 6600)
   -pwd string

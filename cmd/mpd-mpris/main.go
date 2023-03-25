@@ -22,6 +22,7 @@ var (
 	passwordFile string
 
 	noInstance bool
+	instance   string
 	interval   time.Duration
 )
 
@@ -31,7 +32,8 @@ func init() {
 	flag.IntVar(&port, "port", 6600, "The MPD port. Only works if network is \"tcp\". If you use anything else, you should put the port inside addr yourself.")
 	flag.StringVar(&optPassword, "pwd", "", "The MPD connection password. Leave empty for none.")
 	flag.StringVar(&passwordFile, "pwd-file", "", "Path to the file containing the mpd server password.")
-	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
+	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
+	flag.StringVar(&instance, "instance-name", "", "Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd.{instance-name}'")
 	flag.DurationVar(&interval, "interval", time.Second, "How often to update the current song position. Set to 0 to never update the current song position.")
 }
 
@@ -121,8 +123,14 @@ func main() {
 	}
 
 	opts := []mpris.Option{}
+	if noInstance && instance != "" {
+		log.Fatalln("-no-instance cannot be used with -instance-name")
+	}
 	if noInstance {
 		opts = append(opts, mpris.NoInstance())
+	}
+	if instance != "" {
+		opts = append(opts, mpris.InstanceName(instance))
 	}
 
 	instance, err := mpris.NewInstance(c, interval, opts...)
