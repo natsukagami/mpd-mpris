@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,10 +15,11 @@ import (
 )
 
 var (
-	network  string
-	addr     string
-	port     int
-	password string
+	network      string
+	addr         string
+	port         int
+	optPassword  string
+	passwordFile string
 
 	noInstance bool
 	interval   time.Duration
@@ -27,7 +29,8 @@ func init() {
 	flag.StringVar(&network, "network", "tcp", "The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are \"tcp\" and \"unix\")")
 	flag.StringVar(&addr, "host", "", "The MPD host (default localhost)")
 	flag.IntVar(&port, "port", 6600, "The MPD port. Only works if network is \"tcp\". If you use anything else, you should put the port inside addr yourself.")
-	flag.StringVar(&password, "pwd", "", "The MPD connection password. Leave empty for none.")
+	flag.StringVar(&optPassword, "pwd", "", "The MPD connection password. Leave empty for none.")
+	flag.StringVar(&passwordFile, "pwd-file", "", "Path to the file containing the mpd server password.")
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPDris's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
 	flag.DurationVar(&interval, "interval", time.Second, "How often to update the current song position. Set to 0 to never update the current song position.")
 }
@@ -45,8 +48,34 @@ func detectLocalSocket() {
 	}
 }
 
+func getPassword() string {
+	if optPassword != "" && passwordFile != "" {
+		log.Fatalln("Only one of -pwd and -pwd-file should be supplied")
+	}
+	if optPassword != "" {
+		return optPassword
+	}
+	if passwordFile != "" {
+		f, err := os.Open(passwordFile)
+		if err != nil {
+			log.Fatalln("Cannot open password file: ", err)
+		}
+		password, err := io.ReadAll(f)
+		if err != nil {
+			log.Fatalln("Cannot read password file: ", err)
+		}
+		pwdStr := strings.TrimRight(string(password), "\r\n")
+		if pwdStr == "" {
+			log.Fatalln("Password file contains an empty password")
+		}
+		return pwdStr
+	}
+	return ""
+}
+
 func main() {
 	flag.Parse()
+	password := getPassword()
 	if len(addr) == 0 {
 		env_host := os.Getenv("MPD_HOST")
 		if len(env_host) == 0 {
