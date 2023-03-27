@@ -2,5 +2,5 @@
 buildGoModule {
   name = "mpd-mpris";
   src = ./..;
-  vendorSha256 = "sha256-GmdD/4VYp3KeblNGgltFWHdOnK5qsBa2ygIYOBrH+b0=";
+  vendorSha256 = "sha256-HCDJrp9WFB1z+FnYpOI5e/AojtdnpN2ZNtgGVaH/v/Q=";
 }
