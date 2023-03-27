@@ -5,19 +5,71 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/prop"
 
 	"github.com/natsukagami/mpd-mpris/mpd"
 )
 
-// TrackIDFormat is the formatter string for a track ID.
-const TrackIDFormat = "/org/mpd/Tracks/%d"
+const (
+	// TrackIDFormat is the formatter string for a track ID.
+	TrackIDFormat = trackIDPrefix + "%d"
+
+	trackIDPrefix = "/org/mpd/Tracks/"
+)
+
+// NoTrack represents a TrackID of "no track selected".
+const NoTrack dbus.ObjectPath = "/org/mpris/MediaPlayer2/TrackList/NoTrack"
 
 // This file implements a struct that satisfies the `org.mpris.MediaPlayer2.TrackList` interface.
 
-// TrackList is a DBus object satisfying the `org.mpris.MediaPlayer2.TrackList` interface.
+// Tracklist is an implementation of the TrackList interface for `Instance`.
 // https://specifications.freedesktop.org/mpris-spec/latest/TrackList_Interface.html
-type TrackList struct {
-	*Instance
+type Tracklist struct {
+	ins   *Instance
+	props map[string]*prop.Prop
+
+	lastPlaylistVersion int
+}
+
+// Creates and populate a new tracklist.
+func newTracklist(ins *Instance) (*Tracklist, error) {
+	tl := &Tracklist{ins: ins}
+
+	// Populate it with the current mpd playlist
+	status, err := ins.mpd.Status()
+	if err != nil {
+		return nil, err
+	}
+
+	tl.lastPlaylistVersion = status.PlaylistVersion
+
+	// load the current playlist info
+	songs, err := ins.mpd.PlaylistInfo(-1, -1)
+	if err != nil {
+		return nil, err
+	}
+	songsMeta := make([]MetadataMap, 0, len(songs))
+	for _, s := range songs {
+		songsMeta = append(songsMeta, MapFromSong(s))
+	}
+
+	// set the props
+	tl.props = map[string]*prop.Prop{
+		"CanEditTracks": {
+			Value:    true,
+			Writable: false,
+			Emit:     prop.EmitTrue,
+			Callback: nil,
+		},
+		"Tracks": {
+			Value:    songsMeta,
+			Writable: false,
+			Emit:     prop.EmitInvalidates,
+			Callback: nil,
+		},
+	}
+
+	return tl, nil
 }
 
 // URI is an unique resource identifier.
@@ -51,7 +103,7 @@ func MapFromSong(s mpd.Song) MetadataMap {
 	if s.ID == -1 {
 		// No song
 		return MetadataMap{
-			"mpris:trackid": dbus.ObjectPath("/org/mpris/MediaPlayer2/TrackList/NoTrack"),
+			"mpris:trackid": NoTrack,
 		}
 	}
 
