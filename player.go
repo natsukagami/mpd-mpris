@@ -1,7 +1,6 @@
 package mpris
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math"
@@ -222,7 +221,7 @@ func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 	return p.transformErr(p.mpd.Random(c.Value.(bool)))
 }
 
-func (p *Player) createStatus(ctx context.Context) {
+func (p *Player) createStatus() {
 	status, err := p.mpd.Status()
 	if err != nil {
 		log.Fatalf("Cannot create status: %+v", err)
@@ -282,20 +281,14 @@ func (p *Player) createStatus(ctx context.Context) {
 		"CanSeek":       newProp(status.Seekable, nil),
 		"CanControl":    newProp(true, nil),
 	}
+}
 
-	// Set up a position updater
-	go func() {
-		for {
-			if err := p.mpd.Poll(ctx); errors.Is(err, context.Canceled) {
-				return
-			} else if err != nil {
-				log.Fatalf("Error: cannot poll mpd: %+v\n", err)
-			}
-			if err := p.status.Update(p); err != nil {
-				log.Printf("%+v\n", err)
-			}
-		}
-	}()
+// update pulls the status of the player, and forwards it to the MPRIS interface.
+func (p *Player) update() error {
+	if err := p.status.Update(p); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ============================================================================
