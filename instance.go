@@ -20,6 +20,10 @@ type Instance struct {
 	dbus  *dbus.Conn
 	props *prop.Properties
 
+	// interface implementations
+	root   *MediaPlayer2
+	player *Player
+
 	name string
 }
 
@@ -44,7 +48,7 @@ func (ins *Instance) Name() string {
 }
 
 // NewInstance creates a new instance that takes care of the specified mpd.
-func NewInstance(ctx context.Context, mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
+func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 	ins = &Instance{
 		mpd: mpd,
 
@@ -53,30 +57,43 @@ func NewInstance(ctx context.Context, mpd *mpd.Client, opts ...Option) (ins *Ins
 	if ins.dbus, err = dbus.SessionBus(); err != nil {
 		return nil, errors.WithStack(err)
 	}
-
 	// Apply options
 	for _, opt := range opts {
 		opt(ins)
 	}
 
-	mp2 := &MediaPlayer2{Instance: ins}
-	ins.dbus.Export(mp2, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
+	ins.root = &MediaPlayer2{Instance: ins}
+	ins.player = &Player{Instance: ins}
 
-	player := &Player{Instance: ins}
-	player.createStatus(ctx)
-	ins.dbus.Export(player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
-
-	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")
+	ins.player.createStatus()
 
 	ins.props = prop.New(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
-		"org.mpris.MediaPlayer2":        mp2.properties(),
-		"org.mpris.MediaPlayer2.Player": player.props,
+		"org.mpris.MediaPlayer2":        ins.root.properties(),
+		"org.mpris.MediaPlayer2.Player": ins.player.props,
 	})
+	return
+}
+
+// Start starts the instance. Blocking, so you should fire and forget ;)
+func (ins *Instance) Start(ctx context.Context) error {
+	ins.dbus.Export(ins.root, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
+	ins.dbus.Export(ins.player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
+	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")
 
 	reply, err := ins.dbus.RequestName(ins.Name(), dbus.NameFlagReplaceExisting)
-
 	if err != nil || reply != dbus.RequestNameReplyPrimaryOwner {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
-	return
+
+	// Set up a status updater
+	for {
+		if err := ins.mpd.Poll(ctx); errors.Is(err, context.Canceled) {
+			return nil
+		} else if err != nil {
+			return errors.Wrap(err, "cannot poll mpd")
+		}
+		if err := ins.player.update(); err != nil {
+			return err
+		}
+	}
 }

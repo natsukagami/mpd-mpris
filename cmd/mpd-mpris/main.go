@@ -138,7 +138,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	instance, err := mpris.NewInstance(ctx, c, opts...)
+	instance, err := mpris.NewInstance(c, opts...)
 
 	if err != nil {
 		log.Fatalf("Cannot create a MPRIS instance: %+v", err)
@@ -147,10 +147,13 @@ func main() {
 
 	log.Println("mpd-mpris running")
 
-	<-ctx.Done()
+	if err := instance.Start(ctx); err != nil {
+		log.Printf("Error: %+v", err)
+	} else {
+		log.Println("mpd-mpris stopping")
+	}
 
 	// shut everything down
-	log.Println("mpd-mpris stopping")
 
 	if err := instance.Close(); err != nil {
 		log.Fatalf("Cannot shut down cleanly: %+v", err)
