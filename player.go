@@ -149,7 +149,7 @@ func (s *Status) Update(p *Player) *dbus.Error {
 
 	// Volume
 	newVolume := math.Max(0, float64(status.Volume)/100.0)
-	if newVolume != s.Volume {
+	if math.Abs(newVolume-s.Volume) >= 0.5 {
 		s.Volume = newVolume
 		go p.setProp("org.mpris.MediaPlayer2.Player", "Volume", dbus.MakeVariant(newVolume))
 	}
