@@ -119,7 +119,7 @@ func main() {
 	}
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Cannot connect to mpd: %+v", err)
 	}
 
 	opts := []mpris.Option{}
@@ -136,7 +136,7 @@ func main() {
 	instance, err := mpris.NewInstance(c, interval, opts...)
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Cannot create a MPRIS instance: %+v", err)
 	}
 	defer instance.Close()
 

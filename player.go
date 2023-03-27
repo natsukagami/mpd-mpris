@@ -224,8 +224,7 @@ func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 func (p *Player) createStatus(interval time.Duration) {
 	status, err := p.mpd.Status()
 	if err != nil {
-		log.Fatalf("%+v", err)
-		panic(err)
+		log.Fatalf("Cannot create status: %+v", err)
 	}
 	var playStatus PlaybackStatus
 	switch status.State {
@@ -247,7 +246,7 @@ func (p *Player) createStatus(interval time.Duration) {
 	}
 	song, err := p.mpd.CurrentSong()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Cannot get current song: %+v", err)
 	}
 
 	volume := math.Max(0, float64(status.Volume)/100.0)
