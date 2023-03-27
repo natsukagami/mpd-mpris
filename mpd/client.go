@@ -11,6 +11,7 @@ import (
 // Some of the methods are overriden from the `mpd.Client` struct to provide typings safety.
 type Client struct {
 	*mpd.Client
+	*Watcher
 	Address        string
 	MusicDirectory string
 
@@ -29,15 +30,7 @@ func (c *Client) init() error {
 
 // Dial connects to MPD listening on address addr (e.g. "127.0.0.1:6600") on network network (e.g. "tcp").
 func Dial(network, addr string) (*Client, error) {
-	c, err := mpd.Dial(network, addr)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	client := &Client{Client: c, Address: addr}
-	if err := client.init(); err != nil {
-		return nil, err
-	}
-	return client, nil
+	return DialAuthenticated(network, addr, "")
 }
 
 // DialAuthenticated connects to MPD listening on address addr (e.g. "127.0.0.1:6600") on network network (e.g. "tcp").
@@ -47,7 +40,11 @@ func DialAuthenticated(network, addr, password string) (*Client, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	client := &Client{Client: c, Address: addr}
+	w, err := NewWatcher(network, addr, password)
+	if err != nil {
+		return nil, err
+	}
+	client := &Client{Client: c, Watcher: w, Address: addr}
 	if err := client.init(); err != nil {
 		return nil, err
 	}
@@ -188,4 +185,15 @@ func (c *Client) Status() (Status, error) {
 		return Status{}, errors.WithStack(e)
 	}
 	return StatusFromAttrs(a)
+}
+
+// Close closes the client.
+func (c *Client) Close() error {
+	if err := c.Client.Close(); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := c.Watcher.Close(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package mpris
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -221,7 +222,7 @@ func (p *Player) OnShuffle(c *prop.Change) *dbus.Error {
 	return p.transformErr(p.mpd.Random(c.Value.(bool)))
 }
 
-func (p *Player) createStatus(interval time.Duration) {
+func (p *Player) createStatus(ctx context.Context) {
 	status, err := p.mpd.Status()
 	if err != nil {
 		log.Fatalf("Cannot create status: %+v", err)
@@ -259,19 +260,6 @@ func (p *Player) createStatus(interval time.Duration) {
 		CurrentSong:    song,
 	}
 
-	// Set up a position updater
-	if interval > 0 {
-		go func() {
-			tick := time.NewTicker(interval)
-			defer tick.Stop()
-			for range tick.C {
-				if err := p.status.Update(p); err != nil {
-					log.Printf("%+v\n", err)
-				}
-			}
-		}()
-	}
-
 	p.props = map[string]*prop.Prop{
 		"PlaybackStatus": newProp(playStatus, nil),
 		"LoopStatus":     newProp(loopStatus, p.OnLoopStatus),
@@ -294,6 +282,20 @@ func (p *Player) createStatus(interval time.Duration) {
 		"CanSeek":       newProp(status.Seekable, nil),
 		"CanControl":    newProp(true, nil),
 	}
+
+	// Set up a position updater
+	go func() {
+		for {
+			if err := p.mpd.Poll(ctx); errors.Is(err, context.Canceled) {
+				return
+			} else if err != nil {
+				log.Fatalf("Error: cannot poll mpd: %+v\n", err)
+			}
+			if err := p.status.Update(p); err != nil {
+				log.Printf("%+v\n", err)
+			}
+		}
+	}()
 }
 
 // ============================================================================

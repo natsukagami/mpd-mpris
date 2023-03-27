@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	mpris "github.com/natsukagami/mpd-mpris"
 	"github.com/natsukagami/mpd-mpris/mpd"
@@ -23,7 +23,6 @@ var (
 
 	noInstance bool
 	instance   string
-	interval   time.Duration
 )
 
 func init() {
@@ -34,7 +33,6 @@ func init() {
 	flag.StringVar(&passwordFile, "pwd-file", "", "Path to the file containing the mpd server password.")
 	flag.BoolVar(&noInstance, "no-instance", false, "Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd' instead of 'org.mpris.MediaPlayer2.mpd.instance#'")
 	flag.StringVar(&instance, "instance-name", "", "Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd.{instance-name}'")
-	flag.DurationVar(&interval, "interval", time.Second, "How often to update the current song position. Set to 0 to never update the current song position.")
 }
 
 func detectLocalSocket() {
@@ -133,7 +131,12 @@ func main() {
 		opts = append(opts, mpris.InstanceName(instance))
 	}
 
-	instance, err := mpris.NewInstance(c, interval, opts...)
+	// start everything!
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	instance, err := mpris.NewInstance(ctx, c, opts...)
 
 	if err != nil {
 		log.Fatalf("Cannot create a MPRIS instance: %+v", err)
@@ -143,4 +146,11 @@ func main() {
 	log.Println("mpd-mpris running")
 
 	<-make(chan int)
+
+	// shut everything down
+	cancel()
+
+	if err := instance.Close(); err != nil {
+		log.Fatalf("Cannot shut down cleanly: %+v", err)
+	}
 }
