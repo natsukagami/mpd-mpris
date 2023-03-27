@@ -7,8 +7,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	mpris "github.com/natsukagami/mpd-mpris"
 	"github.com/natsukagami/mpd-mpris/mpd"
@@ -133,7 +135,7 @@ func main() {
 
 	// start everything!
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	instance, err := mpris.NewInstance(ctx, c, opts...)
@@ -145,10 +147,10 @@ func main() {
 
 	log.Println("mpd-mpris running")
 
-	<-make(chan int)
+	<-ctx.Done()
 
 	// shut everything down
-	cancel()
+	log.Println("mpd-mpris stopping")
 
 	if err := instance.Close(); err != nil {
 		log.Fatalf("Cannot shut down cleanly: %+v", err)

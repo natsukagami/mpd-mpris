@@ -25,10 +25,17 @@ type Instance struct {
 
 // Close ends the connection.
 func (ins *Instance) Close() error {
+	if ins.mpd == nil {
+		return nil // already closed
+	}
 	if err := ins.dbus.Close(); err != nil {
 		return errors.WithStack(err)
 	}
-	return ins.mpd.Close()
+	if err := ins.mpd.Close(); err != nil {
+		return err
+	}
+	ins.mpd = nil
+	return nil
 }
 
 // Name returns the name of the instance.
