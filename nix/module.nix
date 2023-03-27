@@ -23,11 +23,6 @@ with lib; let
       description = "Path to the file containing the password for the MPD server.";
       default = "";
     };
-    interval = mkOption {
-      type = types.str;
-      description = "The update interval to poll (in Go duration syntax, default to `1s`).";
-      default = "";
-    };
   };
 in
 {
@@ -71,7 +66,6 @@ in
               ExecStart = strings.concatStringsSep " "
                 [
                   "${cfg.package}/bin/mpd-mpris"
-                  (strings.optionalString (opts.interval != "") "-interval ${opts.interval}")
                   (strings.optionalString (opts.host != "") "-host ${opts.host}")
                   (strings.optionalString (opts.network != "") "-network ${opts.network}")
                   (strings.optionalString (opts.passwordFile != "") "-pwd-file ${opts.network}")

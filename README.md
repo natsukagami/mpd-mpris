@@ -66,7 +66,6 @@ Per-instance configurations:
 - `services.mpd-mpris.instances.{name}.network`: The network type. (`-network` flag)
 - `services.mpd-mpris.instances.{name}.port`: The port to connect to. (`-port` flag)
 - `services.mpd-mpris.instances.{name}.passwordFile`: The file containing the password to use. (`-pwd-file` flag)
-- `services.mpd-mpris.instances.{name}.interval`: The update interval. (`-interval` flag)
 
 Each instance will create a `mpd-mpris-{name}` service (with the default being `mpd-mpris`), with the MPRIS instance name
 `org.mpris.MediaPlayer2.mpd.{name}` (with the default being just `org.mpris.MediaPlayer2.mpd`).
@@ -81,8 +80,6 @@ Usage of mpd-mpris:
         The MPD host (default localhost)
   -instance-name string
         Set the MPRIS's interface as 'org.mpris.MediaPlayer2.mpd.{instance-name}'
-  -interval duration
-        How often to update the current song position. Set to 0 to never update the current song position. (default 1s)
   -network string
         The network used to dial to the mpd server. Check https://golang.org/pkg/net/#Dial for available values (most common are "tcp" and "unix") (default "tcp")
   -no-instance
