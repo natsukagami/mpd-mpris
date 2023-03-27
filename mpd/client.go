@@ -166,14 +166,14 @@ func (c *Client) PlaylistContents(name string) ([]File, error) {
 // If both start and end are negative, it does this for all songs in playlist.
 // If end is negative but start is positive, it does it for the song at position start.
 // If both start and end are positive, it does it for positions in range [start, end).
-func (c *Client) PlaylistInfo(start, end int) ([]File, error) {
+func (c *Client) PlaylistInfo(start, end int) ([]Song, error) {
 	a, err := c.Client.PlaylistInfo(start, end)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	arr := make([]File, len(a))
+	arr := make([]Song, len(a))
 	for id, item := range a {
-		if arr[id], err = c.FileFromAttrs(item); err != nil {
+		if arr[id], err = c.SongFromAttrs(item); err != nil {
 			return nil, errors.Wrapf(err, "Item %d", id)
 		}
 	}
@@ -225,6 +225,11 @@ func (c *Client) Keepalive(ctx context.Context) {
 
 // Close closes the client.
 func (c *Client) Close() error {
+	// clean up tmp folder
+	if mpdTemp != "" {
+		os.RemoveAll(mpdTemp)
+	}
+
 	if err := c.Client.Close(); err != nil {
 		return errors.WithStack(err)
 	}

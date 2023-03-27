@@ -1,38 +1,53 @@
 package mpd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 
 	"github.com/fhs/gompd/v2/mpd"
+	"github.com/pkg/errors"
 )
 
-var albumArtLock sync.Mutex
 var (
-	mpdTemp     string // Temp folder location
-	albumArtURI string
+	mpdTemp string // Temp folder location
 )
 
 func init() {
-	mpdTemp = filepath.Join(os.TempDir(), "mpd_mpris")
-	if err := os.MkdirAll(mpdTemp, 0777); err != nil {
-		log.Println("Cannot create temp file for album art, we don't support them then!", err)
+	tmp := filepath.Join(os.TempDir(), "mpd_mpris")
+	if _, err := os.Stat(tmp); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Println("Cannot stat temp folder, not supporting album arts...", err)
+	} else if err == nil {
+		log.Println("Cleaning previously existed temp folder")
+		if err := os.RemoveAll(tmp); err != nil {
+			log.Println("Cannot clean old temp folder, not supporting album arts...", err)
+			return
+		}
+	}
+	if err := os.MkdirAll(tmp, 0777); err != nil {
+		log.Println("Cannot create temp folder, not supporting album arts...:", err)
 		return
 	}
+	mpdTemp = tmp
 }
 
-func newTempFile() string {
-	f, err := ioutil.TempFile(mpdTemp, "artwork_")
-	if err != nil {
-		log.Println("Cannot create temp file for album art, we don't support them then!", err)
-		return ""
+// getAlbumArtPath stats and then load the album art if they exists.
+func getAlbumArtPath(id int) (path string, alreadyExists bool) {
+	if mpdTemp == "" {
+		return
 	}
-	defer f.Close()
-	return f.Name()
+	path = filepath.Join(mpdTemp, fmt.Sprintf("albumart_%d", id))
+	_, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return path, false
+	} else if err != nil {
+		log.Println("Cannot stat album art file, skipping: ", path, err)
+		return "", false
+	}
+	return path, true
 }
 
 // Song represents a music file with metadata.
@@ -40,7 +55,7 @@ type Song struct {
 	File
 	ID int // The song's ID (within the playlist)
 
-	albumArt bool // Whether the song has an album art. The album art will be loaded into memory at AlbumArtURI.
+	albumArt string // The path to the song's album art. Empty if there is none.
 }
 
 // SameAs checks if both songs are the same.
@@ -61,27 +76,21 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 		return
 	}
 
-	// Attempt to load the album art.
-	albumArtLock.Lock()
-	defer albumArtLock.Unlock()
-
+	albumArtURI, exists := getAlbumArtPath(s.ID)
 	if albumArtURI != "" {
-		// delete the old album art file
-		os.Remove(albumArtURI)
-	}
-	albumArtURI = newTempFile()
-	if albumArtURI != "" {
-		// Write the album art to it
-		art, err := c.getAlbumArt(s.Path())
-		if err != nil {
-			log.Println(err)
-			return s, nil
+		if !exists {
+			// Write the album art to it
+			art, err := c.getAlbumArt(s.Path())
+			if err != nil {
+				log.Println(err)
+				return s, nil
+			}
+			if err := ioutil.WriteFile(albumArtURI, art, 0x644); err != nil {
+				log.Println(err)
+				return s, nil
+			}
 		}
-		if err := ioutil.WriteFile(albumArtURI, art, 0x644); err != nil {
-			log.Println(err)
-			return s, nil
-		}
-		s.albumArt = true
+		s.albumArt = albumArtURI
 	}
 
 	return
@@ -119,9 +128,9 @@ func (c *Client) readPicture(uri string) ([]byte, error) {
 
 // AlbumArtURI returns the URI to the album art, if it is available.
 func (s Song) AlbumArtURI() (string, bool) {
-	if !s.albumArt {
+	if s.albumArt == "" {
 		return "", false
 	}
 	// Should I do something better here?
-	return "file://" + albumArtURI, true
+	return "file://" + s.albumArt, true
 }

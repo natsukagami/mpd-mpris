@@ -8,17 +8,20 @@ import (
 
 // Status represents mpd's current status.
 type Status struct {
-	Volume         int
-	Repeat         bool
-	Random         bool
-	Single         bool
-	Consume        bool
-	PlaylistLength time.Duration
-	State          string
-	Song           int
-	Seek           time.Duration
-	NextSong       int
-	Attrs          mpd.Attrs
+	Volume   int
+	Repeat   bool
+	Random   bool
+	Single   bool
+	Consume  bool
+	State    string
+	Song     int
+	Seek     time.Duration
+	NextSong int
+	Attrs    mpd.Attrs
+
+	// Playlist stuff
+	PlaylistVersion int
+	PlaylistLength  time.Duration
 
 	Seekable bool // Whether we can seek the current song
 }
@@ -43,6 +46,7 @@ func StatusFromAttrs(attr mpd.Attrs) (s Status, err error) {
 		s.Seekable = s.Seekable && x != 0.0
 	}
 
+	p.Int("playlist", &s.PlaylistVersion, false)
 	{
 		var x int
 		p.Int("playlistlength", &x, true)
