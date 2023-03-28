@@ -10,128 +10,128 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 		Name: i.Name(),
 		Interfaces: []introspect.Interface{
 			introspect.IntrospectData,
-			introspect.Interface{
+			{
 				Name: "org.mpris.MediaPlayer2",
 				Properties: []introspect.Property{
-					introspect.Property{
+					{
 						Name:   "CanQuit",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanRaise",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "HasTrackList",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "Identity",
 						Type:   "s",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "SupportedUriSchemes",
 						Type:   "as",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "SupportedMimeTypes",
 						Type:   "as",
 						Access: "read",
 					},
 				},
 				Methods: []introspect.Method{
-					introspect.Method{
+					{
 						Name: "Raise",
 					},
-					introspect.Method{
+					{
 						Name: "Quit",
 					},
 				},
 			},
-			introspect.Interface{
+			{
 				Name: "org.mpris.MediaPlayer2.Player",
 				Properties: []introspect.Property{
-					introspect.Property{
+					{
 						Name:   "PlaybackStatus",
 						Type:   "s",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "LoopStatus",
 						Type:   "s",
 						Access: "readwrite",
 					},
-					introspect.Property{
+					{
 						Name:   "Rate",
 						Type:   "d",
 						Access: "readwrite",
 					},
-					introspect.Property{
+					{
 						Name:   "Shuffle",
 						Type:   "b",
 						Access: "readwrite",
 					},
-					introspect.Property{
+					{
 						Name:   "Metadata",
 						Type:   "a{sv}",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "Volume",
 						Type:   "d",
 						Access: "readwrite",
 					},
-					introspect.Property{
+					{
 						Name:   "Position",
 						Type:   "x",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "MinimumRate",
 						Type:   "d",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "MaximumRate",
 						Type:   "d",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanGoNext",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanGoPrevious",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanPlay",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanSeek",
 						Type:   "b",
 						Access: "read",
 					},
-					introspect.Property{
+					{
 						Name:   "CanControl",
 						Type:   "b",
 						Access: "read",
 					},
 				},
 				Signals: []introspect.Signal{
-					introspect.Signal{
+					{
 						Name: "Seeked",
 						Args: []introspect.Arg{
-							introspect.Arg{
+							{
 								Name: "Position",
 								Type: "x",
 							},
@@ -139,43 +139,43 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 					},
 				},
 				Methods: []introspect.Method{
-					introspect.Method{
+					{
 						Name: "Next",
 					},
-					introspect.Method{
+					{
 						Name: "Previous",
 					},
-					introspect.Method{
+					{
 						Name: "Pause",
 					},
-					introspect.Method{
+					{
 						Name: "PlayPause",
 					},
-					introspect.Method{
+					{
 						Name: "Stop",
 					},
-					introspect.Method{
+					{
 						Name: "Play",
 					},
-					introspect.Method{
+					{
 						Name: "Seek",
 						Args: []introspect.Arg{
-							introspect.Arg{
+							{
 								Name:      "Offset",
 								Type:      "x",
 								Direction: "in",
 							},
 						},
 					},
-					introspect.Method{
+					{
 						Name: "SetPosition",
 						Args: []introspect.Arg{
-							introspect.Arg{
+							{
 								Name:      "TrackId",
 								Type:      "o",
 								Direction: "in",
 							},
-							introspect.Arg{
+							{
 								Name:      "Position",
 								Type:      "x",
 								Direction: "in",
@@ -184,11 +184,21 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 					},
 				},
 			},
-			// TODO: This interface is not fully implemented.
-			// introspect.Interface{
-			// 	Name: "org.mpris.MediaPlayer2.TrackList",
-
-			// },
+			{
+				Name: "org.mpris.MediaPlayer2.TrackList",
+				Properties: []introspect.Property{
+					{
+						Name:   "CanEditTracks",
+						Type:   "b",
+						Access: "read",
+					},
+					{
+						Name:   "Tracks",
+						Type:   "ao",
+						Access: "read",
+					},
+				},
+			},
 		},
 	}
 }

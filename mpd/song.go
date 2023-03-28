@@ -82,16 +82,17 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 			// Write the album art to it
 			art, err := c.getAlbumArt(s.Path())
 			if err != nil {
-				log.Println(err)
-				return s, nil
+				log.Printf("error getting artwork for '%v': %v", s.Filepath, err)
+				goto doneAlbumArt
 			}
 			if err := ioutil.WriteFile(albumArtURI, art, 0x644); err != nil {
-				log.Println(err)
-				return s, nil
+				log.Printf("error getting artwork for '%v': %v", s.Filepath, err)
+				goto doneAlbumArt
 			}
 		}
 		s.albumArt = albumArtURI
 	}
+doneAlbumArt:
 
 	return
 }

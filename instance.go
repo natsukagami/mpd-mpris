@@ -21,8 +21,9 @@ type Instance struct {
 	props *prop.Properties
 
 	// interface implementations
-	root   *MediaPlayer2
-	player *Player
+	root      *MediaPlayer2
+	player    *Player
+	tracklist *Tracklist
 
 	name string
 }
@@ -63,13 +64,19 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 	}
 
 	ins.root = &MediaPlayer2{Instance: ins}
-	ins.player = &Player{Instance: ins}
 
+	ins.player = &Player{Instance: ins}
 	ins.player.createStatus()
 
+	ins.tracklist, err = newTracklist(ins)
+	if err != nil {
+		return nil, err
+	}
+
 	ins.props = prop.New(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
-		"org.mpris.MediaPlayer2":        ins.root.properties(),
-		"org.mpris.MediaPlayer2.Player": ins.player.props,
+		"org.mpris.MediaPlayer2":           ins.root.properties(),
+		"org.mpris.MediaPlayer2.Player":    ins.player.props,
+		"org.mpris.MediaPlayer2.TrackList": ins.tracklist.props,
 	})
 	return
 }
@@ -78,6 +85,7 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 func (ins *Instance) Start(ctx context.Context) error {
 	ins.dbus.Export(ins.root, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2")
 	ins.dbus.Export(ins.player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player")
+	ins.dbus.Export(ins.tracklist, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.TrackList")
 	ins.dbus.Export(introspect.NewIntrospectable(ins.IntrospectNode()), "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Introspectable")
 
 	reply, err := ins.dbus.RequestName(ins.Name(), dbus.NameFlagReplaceExisting)

@@ -18,7 +18,7 @@ func (m *MediaPlayer2) properties() map[string]*prop.Prop {
 	return map[string]*prop.Prop{
 		"CanQuit":      newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanQuit
 		"CanRaise":     newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
-		"HasTrackList": newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
+		"HasTrackList": newProp(true, nil),                                             // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
 		"Identity":     newProp(fmt.Sprintf("MPD on %s", m.Instance.mpd.Address), nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
 		// Empty because we can't add arbitary files in...
 		"SupportedUriSchemes": newProp([]string{}, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedUriSchemes

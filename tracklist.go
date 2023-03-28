@@ -57,13 +57,13 @@ func newTracklist(ins *Instance) (*Tracklist, error) {
 	tl.props = map[string]*prop.Prop{
 		"CanEditTracks": {
 			Value:    true,
-			Writable: false,
+			Writable: true,
 			Emit:     prop.EmitTrue,
 			Callback: nil,
 		},
 		"Tracks": {
 			Value:    songsMeta,
-			Writable: false,
+			Writable: true,
 			Emit:     prop.EmitInvalidates,
 			Callback: nil,
 		},
