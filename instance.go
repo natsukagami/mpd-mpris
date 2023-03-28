@@ -85,7 +85,8 @@ func (ins *Instance) Start(ctx context.Context) error {
 		return errors.WithStack(err)
 	}
 
-	// Set up a seek updater
+	// Set up a periodic updaters
+	go ins.mpd.Keepalive(ctx)
 	go ins.player.pollSeek(ctx)
 
 	// Set up a status updater
