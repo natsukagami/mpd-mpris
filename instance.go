@@ -3,6 +3,7 @@ package mpris
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/godbus/dbus/v5/introspect"
@@ -104,8 +105,19 @@ func (ins *Instance) Start(ctx context.Context) error {
 		} else if err != nil {
 			return errors.Wrap(err, "cannot poll mpd")
 		}
-		if err := ins.player.update(); err != nil {
+		status, err := ins.mpd.Status()
+		if err != nil {
+			return errors.Wrap(err, "cannot get status from mpd")
+		}
+		if err := ins.player.update(&status); err != nil {
 			return err
 		}
+	}
+}
+
+// setProp sets a given property.
+func (ins *Instance) setProp(iface, name string, value dbus.Variant) {
+	if err := ins.props.Set(fmt.Sprintf("org.mpris.MediaPlayer2.%s", iface), name, value); err != nil {
+		log.Printf("Setting %s %s failed: %+v\n", iface, name, errors.WithStack(err))
 	}
 }
