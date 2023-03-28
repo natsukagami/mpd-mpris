@@ -85,6 +85,9 @@ func (ins *Instance) Start(ctx context.Context) error {
 		return errors.WithStack(err)
 	}
 
+	// Set up a seek updater
+	go ins.player.pollSeek(ctx)
+
 	// Set up a status updater
 	for {
 		if err := ins.mpd.Poll(ctx); errors.Is(err, context.Canceled) {
