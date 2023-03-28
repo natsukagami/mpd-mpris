@@ -1,7 +1,12 @@
 package mpd
 
 import (
+	"context"
+	"log"
+	"os"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/fhs/gompd/v2/mpd"
 	"github.com/pkg/errors"
@@ -18,6 +23,12 @@ type Client struct {
 	lastSongMu sync.Mutex
 	lastSong   *Song
 }
+
+// KeepaliveTimeout is the time between pings to keep the connection alive.
+// As MPD recommends a 30 second timeout for connection (https://mpd.readthedocs.io/en/latest/client.html#environment-variables),
+// we keep something similar here.
+// However, if we detect `MPD_TIMEOUT`, we set the corresponding timeout.
+const KeepaliveTimeoutDefault = 25 * time.Second
 
 func (c *Client) init() error {
 	// Find the music directory
@@ -185,6 +196,31 @@ func (c *Client) Status() (Status, error) {
 		return Status{}, errors.WithStack(e)
 	}
 	return StatusFromAttrs(a)
+}
+
+// Keepalive keeps the client alive with pings until `ctx` is done.
+func (c *Client) Keepalive(ctx context.Context) {
+	// get the timeout
+	timeout := KeepaliveTimeoutDefault
+	if tStr, ok := os.LookupEnv("MPD_TIMEOUT"); ok {
+		if t, err := strconv.Atoi(tStr); err == nil {
+			timeout = time.Duration(t) * time.Second
+			log.Println("Using MPD_TIMEOUT's keepalive clock of %v", timeout)
+		}
+	}
+
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := c.Ping(); err != nil {
+				log.Fatalf("Connection to mpd is severed: %+v", errors.WithStack(err))
+			}
+		}
+	}
 }
 
 // Close closes the client.
