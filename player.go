@@ -1,6 +1,7 @@
 package mpris
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -87,6 +88,34 @@ type Status struct {
 	Shuffle        bool
 	Volume         float64
 	CurrentSong    mpd.Song
+	// Internal seek
+	Seek time.Duration
+}
+
+// Update the seek by 1 automatically.
+func (s *Status) updateSeek(p *Player) {
+	if !s.mu.TryLock() {
+		return // It's not too important, anyway :P
+	}
+	defer s.mu.Unlock()
+	if s.PlaybackStatus == PlaybackStatusPlaying {
+		s.Seek += time.Second
+		go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(s.Seek)))
+	}
+}
+
+// Polls every second to update the internal seek.
+func (p *Player) pollSeek(ctx context.Context) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			p.status.updateSeek(p)
+		}
+	}
 }
 
 // ============================================================================
@@ -154,7 +183,10 @@ func (s *Status) Update(p *Player) *dbus.Error {
 		go p.setProp("org.mpris.MediaPlayer2.Player", "Volume", dbus.MakeVariant(newVolume))
 	}
 
-	go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
+	if s.Seek != status.Seek {
+		s.Seek = status.Seek
+		go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
+	}
 	return nil
 }
 
@@ -257,6 +289,7 @@ func (p *Player) createStatus() {
 		Shuffle:        status.Random,
 		Volume:         volume,
 		CurrentSong:    song,
+		Seek:           status.Seek,
 	}
 
 	p.props = map[string]*prop.Prop{
