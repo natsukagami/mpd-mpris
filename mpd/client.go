@@ -2,6 +2,7 @@ package mpd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -178,6 +179,23 @@ func (c *Client) PlaylistInfo(start, end int) ([]Song, error) {
 		}
 	}
 	return arr, nil
+}
+
+// PlaylistChanges returns all the changes in the playlist.
+func (c *Client) PlaylistChanges(version int) ([]Song, error) {
+	rs, err := c.Command(fmt.Sprintf("plchanges %v", version)).AttrsList("file")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	cs := make([]Song, 0, len(rs))
+	for _, r := range rs {
+		c, err := c.SongFromAttrs(r)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parsing %v", r)
+		}
+		cs = append(cs, c)
+	}
+	return cs, nil
 }
 
 // Stats displays statistics (number of artists, songs, playtime, etc)

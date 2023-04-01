@@ -2,6 +2,7 @@ package mpris
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -29,6 +30,117 @@ type Tracklist struct {
 	props map[string]*prop.Prop
 
 	lastPlaylistVersion int
+	songs               []mpd.Song
+}
+
+func (tl *Tracklist) update(status *mpd.Status) error {
+	if status.PlaylistVersion == tl.lastPlaylistVersion {
+		return nil // no change
+	}
+	changes, err := tl.ins.mpd.PlaylistChanges(tl.lastPlaylistVersion)
+	if err != nil {
+		return err
+	}
+
+	if len(changes) < status.PlaylistLength {
+		tl.applyChanges(status, changes)
+		return nil
+	}
+
+	songs, err := tl.getPlaylist()
+	if err != nil {
+		return err
+	}
+
+	tl.ins.setProp("TrackList", "Tracks", dbus.MakeVariant(songsToURIs(songs)))
+	// emit `TrackListReplaced`
+	// https://specifications.freedesktop.org/mpris-spec/latest/Track_List_Interface.html#Signal:TrackListReplaced
+	tl.ins.emit("TrackList", "TrackListReplaced", songs, idToURI(status.Song))
+
+	tl.lastPlaylistVersion = status.PlaylistVersion
+	tl.songs = songs
+
+	return nil
+}
+
+// mpd's change list model (`plchanges`, see https://mpd.readthedocs.io/en/latest/protocol.html#command-plchanges)
+// is a bit complicated to change to sequential insert/remove model.
+func (tl *Tracklist) applyChanges(status *mpd.Status, cs []mpd.Song) {
+	sort.Slice(cs, func(i, j int) bool { return cs[i].Pos < cs[j].Pos })
+	// Change represents a playlist change.
+	type Change struct {
+		ChangedPos int
+		Song       *mpd.Song
+	}
+	toInsert := make([]Change, 0)
+	toRemove := make([]int, 0)
+
+	offset := 0
+	for _, _change := range cs {
+		change := _change
+		i := change.Pos
+		ptr := i + offset
+		// no change if not in cs
+		if ptr < len(tl.songs) && tl.songs[ptr].ID == change.ID {
+			continue
+		}
+		// opt: if tl.ids[oldPtr+1] == change, we can remove instead
+		if ptr+1 < len(tl.songs) && tl.songs[ptr+1].ID == change.ID {
+			toRemove = append(toRemove, tl.songs[ptr].ID)
+			offset += 1
+			continue
+		}
+		// we have to insert
+		toInsert = append(toInsert, Change{ChangedPos: i - 1, Song: &change})
+		offset -= 1
+	}
+
+	// send all removals first
+	for ptr := status.PlaylistLength + offset; ptr < len(tl.songs); ptr++ {
+		tl.ins.emit("TrackList", "TrackRemoved", idToURI(tl.songs[ptr].ID))
+	}
+	for _, r := range toRemove {
+		tl.ins.emit("TrackList", "TrackRemoved", idToURI(r))
+	}
+	// mutate songs
+	for _, change := range cs {
+		if change.Pos == len(tl.songs) {
+			tl.songs = append(tl.songs, change)
+		} else {
+			tl.songs[change.Pos] = change
+		}
+	}
+	tl.songs = tl.songs[:status.PlaylistLength]
+	// send insertions left to right
+	for _, c := range toInsert {
+		id := -1
+		if c.ChangedPos != -1 {
+			id = tl.songs[c.ChangedPos].ID
+		}
+		tl.ins.emit("TrackList", "TrackAdded", MapFromSong(*c.Song), idToURI(id))
+	}
+
+	// update prop
+	go tl.ins.setProp("TrackList", "Tracks", dbus.MakeVariant(songsToURIs(tl.songs)))
+
+	tl.lastPlaylistVersion = status.PlaylistVersion
+}
+
+// getPlaylist returns the whole playlist. Also stores it in the tracklist.
+func (tl *Tracklist) getPlaylist() ([]mpd.Song, error) {
+	songs, err := tl.ins.mpd.PlaylistInfo(-1, -1)
+	if err != nil {
+		return nil, err
+	}
+	return songs, nil
+}
+
+func songsToURIs(songs []mpd.Song) []dbus.ObjectPath {
+	songsMeta := make([]dbus.ObjectPath, 0, len(songs))
+	for _, s := range songs {
+		songsMeta = append(songsMeta, idToURI(s.ID))
+	}
+	return songsMeta
 }
 
 // Creates and populate a new tracklist.
@@ -41,17 +153,14 @@ func newTracklist(ins *Instance) (*Tracklist, error) {
 		return nil, err
 	}
 
-	tl.lastPlaylistVersion = status.PlaylistVersion
-
 	// load the current playlist info
-	songs, err := ins.mpd.PlaylistInfo(-1, -1)
+	songs, err := tl.getPlaylist()
 	if err != nil {
 		return nil, err
 	}
-	songsMeta := make([]MetadataMap, 0, len(songs))
-	for _, s := range songs {
-		songsMeta = append(songsMeta, MapFromSong(s))
-	}
+
+	tl.lastPlaylistVersion = status.PlaylistVersion
+	tl.songs = songs
 
 	// set the props
 	tl.props = map[string]*prop.Prop{
@@ -62,7 +171,7 @@ func newTracklist(ins *Instance) (*Tracklist, error) {
 			Callback: nil,
 		},
 		"Tracks": {
-			Value:    songsMeta,
+			Value:    songsToURIs(songs),
 			Writable: true,
 			Emit:     prop.EmitInvalidates,
 			Callback: nil,
@@ -98,6 +207,13 @@ func (m *MetadataMap) nonEmptySlice(field string, values []string) {
 	}
 }
 
+func idToURI(id int) dbus.ObjectPath {
+	if id == -1 {
+		return NoTrack
+	}
+	return dbus.ObjectPath(fmt.Sprintf(TrackIDFormat, id))
+}
+
 // MapFromSong returns a MetadataMap from the Song struct in mpd.
 func MapFromSong(s mpd.Song) MetadataMap {
 	if s.ID == -1 {
@@ -108,7 +224,7 @@ func MapFromSong(s mpd.Song) MetadataMap {
 	}
 
 	m := &MetadataMap{
-		"mpris:trackid": dbus.ObjectPath(fmt.Sprintf(TrackIDFormat, s.ID)),
+		"mpris:trackid": idToURI(s.ID),
 		"mpris:length":  s.Duration / time.Microsecond,
 	}
 

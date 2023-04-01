@@ -21,7 +21,7 @@ type Status struct {
 
 	// Playlist stuff
 	PlaylistVersion int
-	PlaylistLength  time.Duration
+	PlaylistLength  int
 
 	Seekable bool // Whether we can seek the current song
 }
@@ -50,7 +50,7 @@ func StatusFromAttrs(attr mpd.Attrs) (s Status, err error) {
 	{
 		var x int
 		p.Int("playlistlength", &x, true)
-		s.PlaylistLength = time.Duration(x) * time.Second
+		s.PlaylistLength = x
 	}
 
 	p.String("state", &s.State, true)

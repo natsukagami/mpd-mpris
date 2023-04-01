@@ -198,6 +198,56 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 						Access: "read",
 					},
 				},
+				Signals: []introspect.Signal{
+					{
+						Name: "TrackListReplaced",
+						Args: []introspect.Arg{
+							{
+								Name: "Tracks",
+								Type: "ao",
+							},
+							{
+								Name: "CurrentTrack",
+								Type: "o",
+							},
+						},
+					},
+					{
+						Name: "TrackAdded",
+						Args: []introspect.Arg{
+							{
+								Name: "Metadata",
+								Type: "a{sv}",
+							},
+							{
+								Name: "AfterTrack",
+								Type: "o",
+							},
+						},
+					},
+					{
+						Name: "TrackRemoved",
+						Args: []introspect.Arg{
+							{
+								Name: "TrackId",
+								Type: "o",
+							},
+						},
+					},
+					{
+						Name: "TrackMetadataChanged",
+						Args: []introspect.Arg{
+							{
+								Name: "TrackId",
+								Type: "o",
+							},
+							{
+								Name: "Metadata",
+								Type: "a{sv}",
+							},
+						},
+					},
+				},
 			},
 		},
 	}

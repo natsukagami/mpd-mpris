@@ -53,7 +53,8 @@ func getAlbumArtPath(id int) (path string, alreadyExists bool) {
 // Song represents a music file with metadata.
 type Song struct {
 	File
-	ID int // The song's ID (within the playlist)
+	ID  int // The song's ID (within the playlist)
+	Pos int // Its position in the playlist
 
 	albumArt string // The path to the song's album art. Empty if there is none.
 }
@@ -71,6 +72,9 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 	if s.ID, err = strconv.Atoi(attr["Id"]); err != nil {
 		s.ID = -1
 		return s, nil
+	}
+	if s.Pos, err = strconv.Atoi(attr["Pos"]); err != nil {
+		return s, errors.Wrapf(err, "parsing song position")
 	}
 	if s.File, err = c.FileFromAttrs(attr); err != nil {
 		return

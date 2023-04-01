@@ -109,6 +109,10 @@ func (ins *Instance) Start(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "cannot get status from mpd")
 		}
+		// do tracklist before player, since player might refer to the current track not on the tracklist.
+		if err := ins.tracklist.update(&status); err != nil {
+			return err
+		}
 		if err := ins.player.update(&status); err != nil {
 			return err
 		}
@@ -119,5 +123,12 @@ func (ins *Instance) Start(ctx context.Context) error {
 func (ins *Instance) setProp(iface, name string, value dbus.Variant) {
 	if err := ins.props.Set(fmt.Sprintf("org.mpris.MediaPlayer2.%s", iface), name, value); err != nil {
 		log.Printf("Setting %s %s failed: %+v\n", iface, name, errors.WithStack(err))
+	}
+}
+
+// emit emits a signal.
+func (ins *Instance) emit(iface, name string, value ...interface{}) {
+	if err := ins.dbus.Emit("/org/mpris/MediaPlayer2", fmt.Sprintf("org.mpris.MediaPlayer2.%s.%s", iface, name), value...); err != nil {
+		log.Printf("Emitting %s.%s with %v failed: %+v\n", iface, name, value, errors.WithStack(err))
 	}
 }

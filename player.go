@@ -432,5 +432,6 @@ func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
 		return p.transformErr(err)
 	}
 	// Unnatural seek, create signal
-	return p.transformErr(p.dbus.Emit("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player.Seeked", x))
+	p.emit("Player", "Seeked", x)
+	return nil
 }
