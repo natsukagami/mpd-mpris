@@ -36,7 +36,7 @@ in
       default = true;
     };
     instances = mkOption {
-      type = types.attrsOf (types.submodule instanceOpts);
+      type = types.attrsOf (types.submodule { options = instanceOpts; });
       description = "Configure multiple instances of mpd-mpris, by name";
       default = { };
     };
