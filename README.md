@@ -3,6 +3,7 @@
 [![AUR version](https://img.shields.io/aur/version/mpd-mpris)](https://aur.archlinux.org/packages/mpd-mpris)
 [![AUR version](https://img.shields.io/aur/version/mpd-mpris-bin)](https://aur.archlinux.org/packages/mpd-mpris-bin)
 [![Flake is available](https://img.shields.io/badge/flake-available-blue)](#for-nix-users)
+[![Matrix chat](https://img.shields.io/matrix/mpd-mpris:matrix.org)](https://matrix.to/#/#mpd-mpris:matrix.org)
 
 
 An implementation of the [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/) protocol for [MPD](http://musicpd.org/).
@@ -94,6 +95,10 @@ Usage of mpd-mpris:
 
 Will block for requests and log them down so you may want
 to run and forget.
+
+## Questions?
+
+Join our Matrix channel at [`#mpd-mpris:matrix.org`](https://matrix.to/#/#mpd-mpris:matrix.org).
 
 ## Implementation Status
 
