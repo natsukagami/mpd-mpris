@@ -59,7 +59,7 @@ func (c *Client) FileFromAttrs(attr mpd.Attrs) (s File, err error) {
 		s.Filepath = filepath.String()
 	}
 
-	if !p.String("Title", &s.Title, true) {
+	if !p.String("Title", &s.Title, true) && !p.String("Name", &s.Title, true) && !p.String("file", &s.Title, true) {
 		s.Title = "unknown title"
 	}
 	// All the following values can be empty
