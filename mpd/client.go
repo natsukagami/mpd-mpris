@@ -217,7 +217,7 @@ func (c *Client) Keepalive(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := c.Ping(); err != nil {
-				log.Fatalf("Connection to mpd is severed: %+v", errors.WithStack(err))
+				log.Fatalf("Connection to mpd is severed: %+v\nEnsure MPD's \"connection_timeout\" setting is greater than %v seconds.", errors.WithStack(err), timeout.Seconds())
 			}
 		}
 	}
