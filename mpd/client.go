@@ -205,7 +205,7 @@ func (c *Client) Keepalive(ctx context.Context) {
 	if tStr, ok := os.LookupEnv("MPD_TIMEOUT"); ok {
 		if t, err := strconv.Atoi(tStr); err == nil {
 			timeout = time.Duration(t) * time.Second
-			log.Println("Using MPD_TIMEOUT's keepalive clock of %v", timeout)
+			log.Printf("Using MPD_TIMEOUT's keepalive clock of %v", timeout)
 		}
 	}
 
