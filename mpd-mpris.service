@@ -1,6 +1,7 @@
 [Unit]
+# Requires=mpd.service is omitted because users may want to run mpd not as
+# a service but via terminal or network (remote mpd instance).
 Description=mpd-mpris: An implementation of the MPRIS protocol for MPD
-Requires=mpd.service
 After=mpd.service
 
 [Service]
