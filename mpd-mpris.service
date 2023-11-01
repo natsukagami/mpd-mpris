@@ -1,6 +1,8 @@
 [Unit]
+# If you run mpd-mpris to connect to a local mpd server, uncomment 
+# the following lines to declare a dependency with the mpd service.
+# Requires=mpd.service
 Description=mpd-mpris: An implementation of the MPRIS protocol for MPD
-Requires=mpd.service
 After=mpd.service
 
 [Service]
