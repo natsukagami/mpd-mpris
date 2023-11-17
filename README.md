@@ -23,7 +23,7 @@ go install github.com/natsukagami/mpd-mpris/cmd/mpd-mpris
 Check out the AUR packages [mpd-mpris](https://aur.archlinux.org/packages/mpd-mpris)
 and [mpd-mpris-bin](https://aur.archlinux.org/packages/mpd-mpris-bin)
 for the manually and pre-built versions respectively.
-A systemd user service file is also provided (enable with `systemctl --user enable mpd-mpris --now`).
+A systemd user service file is also provided (enable with `systemctl --user --now enable mpd-mpris`).
 
 ### For Nix users
 
