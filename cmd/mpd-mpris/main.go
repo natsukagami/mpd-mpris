@@ -94,6 +94,9 @@ func main() {
 			} else {
 				addr = env_host
 			}
+			if strings.HasPrefix(addr, "/") {
+				network = "unix"
+			}
 		}
 	}
 
