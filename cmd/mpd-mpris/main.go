@@ -79,13 +79,17 @@ func main() {
 	flag.Parse()
 	password := getPassword()
 	if len(addr) == 0 {
+		// For a description of what can be in the the MPD_HOST environment variable, see:
+		// https://www.musicpd.org/doc/mpc/html/#cmdoption-host
 		env_host := os.Getenv("MPD_HOST")
 		if len(env_host) == 0 {
 			addr = "localhost"
 			detectLocalSocket()
 		} else {
-			if strings.Index(env_host, "@") > -1 {
-				addr_pwd := strings.Split(env_host, "@")
+			// When looking for the password delimiter, ignore the first character.
+			// An '@' sign at the start of the envvar signifies an "abstract socket" without password.
+			if strings.Index(env_host[1:], "@") > -1 {
+				addr_pwd := strings.SplitN(env_host, "@", 2)
 				// allow providing an alternative password on the command line
 				if len(password) == 0 {
 					password = addr_pwd[0]
@@ -93,6 +97,10 @@ func main() {
 				addr = addr_pwd[1]
 			} else {
 				addr = env_host
+			}
+			// Check if addr refers to a path or abstract socket name and change network accordingly.
+			if strings.HasPrefix(addr, "/") || strings.HasPrefix(addr, "@") {
+				network = "unix"
 			}
 		}
 	}
