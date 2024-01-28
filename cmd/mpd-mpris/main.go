@@ -79,6 +79,8 @@ func main() {
 	flag.Parse()
 	password := getPassword()
 	if len(addr) == 0 {
+		// For a description of what can be in the the MPD_HOST environment variable, see:
+		// https://www.musicpd.org/doc/mpc/html/#cmdoption-host
 		env_host := os.Getenv("MPD_HOST")
 		if len(env_host) == 0 {
 			addr = "localhost"
