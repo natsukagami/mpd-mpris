@@ -84,8 +84,10 @@ func main() {
 			addr = "localhost"
 			detectLocalSocket()
 		} else {
-			if strings.Index(env_host, "@") > -1 {
-				addr_pwd := strings.Split(env_host, "@")
+			// When looking for the password delimiter, ignore the first character.
+			// An '@' sign at the start of the envvar signifies an "abstract socket" without password.
+			if strings.Index(env_host[1:], "@") > -1 {
+				addr_pwd := strings.SplitN(env_host, "@", 2)
 				// allow providing an alternative password on the command line
 				if len(password) == 0 {
 					password = addr_pwd[0]
@@ -94,7 +96,8 @@ func main() {
 			} else {
 				addr = env_host
 			}
-			if strings.HasPrefix(addr, "/") {
+			// Check if addr refers to a path or abstract socket name and change network accordingly.
+			if strings.HasPrefix(addr, "/") || strings.HasPrefix(addr, "@") {
 				network = "unix"
 			}
 		}
