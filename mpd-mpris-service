@@ -1,0 +1,16 @@
+#!/sbin/openrc-run
+
+description="mpd-mpris: An implementation of the MPRIS protocol for MPD"
+
+# TODO: use full path
+command="mpd-mpris"
+command_args="-no-instance"
+
+depend() {
+  after mpd
+}
+
+
+start() {
+  $command $command_args
+}
