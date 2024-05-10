@@ -2,8 +2,7 @@
 
 description="mpd-mpris: An implementation of the MPRIS protocol for MPD"
 
-# TODO: use full path
-command="mpd-mpris"
+command="/usr/bin/mpd-mpris"
 command_args="-no-instance"
 
 depend() {
