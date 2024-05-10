@@ -9,7 +9,6 @@ depend() {
   after mpd
 }
 
-
 start() {
   $command $command_args
 }
