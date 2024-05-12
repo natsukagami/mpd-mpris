@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+
+description="mpd-mpris: An implementation of the MPRIS protocol for MPD"
+
+command="/usr/local/bin/mpd-mpris"
+command_args="-no-instance"
+
+depend() {
+  after mpd
+}
+
+start() {
+  $command $command_args
+}
