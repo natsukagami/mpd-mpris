@@ -23,7 +23,22 @@ go install github.com/natsukagami/mpd-mpris/cmd/mpd-mpris
 Check out the AUR packages [mpd-mpris](https://aur.archlinux.org/packages/mpd-mpris)
 and [mpd-mpris-bin](https://aur.archlinux.org/packages/mpd-mpris-bin)
 for the manually and pre-built versions respectively.
-A systemd user service file is also provided (enable with `systemctl --user --now enable mpd-mpris`).
+
+### Autostart
+
+Service files are provided for both the Systemd and OpenRC init systems. To
+enable the Systemd service run:
+
+```bash
+systemctl --user --now enable mpd-mpris
+```
+
+To run the OpenRC service, copy mpd-mpris-service to /etc/init.d and run:
+
+```bash
+rc-update add mpd-mpris-service default
+```
+
 
 ### For Nix users
 
