@@ -2,7 +2,7 @@
 
 description="mpd-mpris: An implementation of the MPRIS protocol for MPD"
 
-command="/usr/bin/mpd-mpris"
+command="/usr/local/bin/mpd-mpris"
 command_args="-no-instance"
 
 depend() {
