@@ -33,7 +33,7 @@ enable the Systemd service run:
 systemctl --user --now enable mpd-mpris
 ```
 
-To run the OpenRC service, copy mpd-mpris-service to /etc/init.d and run:
+To run the OpenRC service, copy services/mpd-mpris-service to /etc/init.d and run:
 
 ```bash
 rc-update add mpd-mpris-service default
