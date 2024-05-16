@@ -6,7 +6,7 @@ buildGoModule {
 
   postInstall = ''
     mkdir -p $out/lib/systemd/user
-    substitute mpd-mpris.service $out/lib/systemd/user/mpd-mpris.service \
+    substitute services/mpd-mpris.service $out/lib/systemd/user/mpd-mpris.service \
        --replace "/usr/bin/mpd-mpris" "$out/bin/mpd-mpris"
 
     mkdir -p $out/etc/xdg/autostart
