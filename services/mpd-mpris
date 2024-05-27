@@ -10,5 +10,5 @@ depend() {
 }
 
 start() {
-  $command $command_args
+  $command $command_args &
 }
