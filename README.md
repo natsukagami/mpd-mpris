@@ -36,7 +36,7 @@ systemctl --user --now enable mpd-mpris
 To run the OpenRC service, copy services/mpd-mpris to /etc/init.d and run:
 
 ```bash
-rc-update add mpd-mpris-service default
+rc-update add mpd-mpris default
 ```
 
 
