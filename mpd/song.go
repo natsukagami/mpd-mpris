@@ -48,7 +48,7 @@ func (s *Song) SameAs(other *Song) bool {
 	if other == nil || s == nil {
 		return s == nil && other == nil
 	}
-	return s.ID == other.ID && s.Path() == other.Path()
+	return s.ID == other.ID && s.Path() == other.Path() && s.Title == other.Title
 }
 
 // SongFromAttrs returns a song from the attributes map.
