@@ -8,6 +8,8 @@ After=mpd.service
 [Service]
 ExecStart=mpd-mpris -no-instance
 Restart=on-failure
+Type=dbus
+BusName=org.mpris.MediaPlayer2.mpd
 
 [Install]
 WantedBy=default.target
