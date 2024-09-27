@@ -70,7 +70,10 @@ func (c *Client) CurrentSong() (Song, error) {
 	}
 	c.lastSongMu.Lock()
 	defer c.lastSongMu.Unlock()
-	if c.lastSong != nil && c.lastSong.Path() == a["file"] {
+
+	// Nasty hack: if duration is 0: we have an audio stream. The song can change,
+	// but its path won't. So we update anyways because we cannot be sure of the change!
+	if c.lastSong != nil && c.lastSong.Path() == a["file"] && c.lastSong.Duration > 0 {
 		// Heuristically, we have... the same song...
 		return *c.lastSong, nil
 	}
