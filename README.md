@@ -18,11 +18,9 @@ Probably needs Go v1.9 or newer.
 go install github.com/natsukagami/mpd-mpris/cmd/mpd-mpris
 ```
 
-### For Arch Linux users.
+### For Arch Linux users
 
-Check out the AUR packages [mpd-mpris](https://aur.archlinux.org/packages/mpd-mpris)
-and [mpd-mpris-bin](https://aur.archlinux.org/packages/mpd-mpris-bin)
-for the manually and pre-built versions respectively.
+The [mpd-mpris](https://archlinux.org/packages/extra/x86_64/mpd-mpris/) package is available in the official repository.
 
 ### Autostart
 
