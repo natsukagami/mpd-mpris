@@ -184,6 +184,81 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 					},
 				},
 			},
+			introspect.Interface{
+				Name: "org.freedesktop.DBus.Properties",
+				Signals: []introspect.Signal{
+					introspect.Signal{
+						Name: "PropertiesChanged",
+						Args: []introspect.Arg{
+							introspect.Arg{
+								Name: "interface_name",
+								Type: "s",
+							},
+							introspect.Arg{
+								Name: "changed_properties",
+								Type: "a{sv}",
+							},
+						},
+					},
+				},
+				Methods: []introspect.Method{
+					introspect.Method{
+						Name: "Get",
+						Args: []introspect.Arg{
+							introspect.Arg{
+								Name:      "interface_name",
+								Type:      "s",
+								Direction: "in",
+							},
+							introspect.Arg{
+								Name:      "property_name",
+								Type:      "s",
+								Direction: "in",
+							},
+							introspect.Arg{
+								Name:      "value",
+								Type:      "v",
+								Direction: "out",
+							},
+						},
+					},
+					introspect.Method{
+						Name: "GetAll",
+						Args: []introspect.Arg{
+							introspect.Arg{
+								Name:      "interface_name",
+								Type:      "s",
+								Direction: "in",
+							},
+							introspect.Arg{
+								Name:      "properties",
+								Type:      "a{sv}",
+								Direction: "out",
+							},
+						},
+					},
+					introspect.Method{
+						Name: "Set",
+						Args: []introspect.Arg{
+							introspect.Arg{
+								Name:      "interface_name",
+								Type:      "s",
+								Direction: "in",
+							},
+							introspect.Arg{
+								Name:      "property_name",
+								Type:      "s",
+								Direction: "out",
+							},
+							introspect.Arg{
+								Name:      "value",
+								Type:      "v",
+								Direction: "in",
+							},
+						},
+					},
+				},
+			},
 			// TODO: This interface is not fully implemented.
 			// introspect.Interface{
 			// 	Name: "org.mpris.MediaPlayer2.TrackList",
