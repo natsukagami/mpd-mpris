@@ -60,7 +60,7 @@ in
             };
 
             Service = {
-              Type = "simple";
+              Type = "dbus";
               Restart = "on-failure";
               RestartSec = "5s";
               ExecStart = strings.concatStringsSep " "
