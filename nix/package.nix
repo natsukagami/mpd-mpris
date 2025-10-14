@@ -1,8 +1,9 @@
-{ buildGoModule }:
+{ buildGoModule, lib }:
 buildGoModule (attrs: {
   name = "mpd-mpris";
   src = ./..;
-  vendorHash = "sha256-HCDJrp9WFB1z+FnYpOI5e/AojtdnpN2ZNtgGVaH/v/Q=";
+  vendorHash = "sha256-V0ogN36WgtWaEBo7DDmXusNuLBYmkB3CRHIqxQa2gDU=";
+  # vendorHash = lib.fakeHash;
 
   postInstall = ''
     mkdir -p $out/lib/systemd/user

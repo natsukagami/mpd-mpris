@@ -67,7 +67,7 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 
 	ins.player.createStatus()
 
-	ins.props = prop.New(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
+	ins.props, err = prop.Export(ins.dbus, "/org/mpris/MediaPlayer2", map[string]map[string]*prop.Prop{
 		"org.mpris.MediaPlayer2":        ins.root.properties(),
 		"org.mpris.MediaPlayer2.Player": ins.player.props,
 	})
