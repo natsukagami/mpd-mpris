@@ -141,6 +141,11 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 						Type:   "b",
 						Access: "read",
 					},
+					{
+						Name:   "CanPause",
+						Type:   "b",
+						Access: "read",
+					},
 				},
 				Signals: []introspect.Signal{
 					introspect.Signal{
