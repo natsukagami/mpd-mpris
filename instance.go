@@ -25,6 +25,8 @@ type Instance struct {
 	player *Player
 
 	name string
+
+	displayName string
 }
 
 // Close ends the connection.
@@ -53,6 +55,8 @@ func NewInstance(mpd *mpd.Client, opts ...Option) (ins *Instance, err error) {
 		mpd: mpd,
 
 		name: fmt.Sprintf("org.mpris.MediaPlayer2.mpd.instance%d", os.Getpid()),
+
+		displayName: fmt.Sprintf("MPD on %s", mpd.Address),
 	}
 	if ins.dbus, err = dbus.SessionBus(); err != nil {
 		return nil, errors.WithStack(err)

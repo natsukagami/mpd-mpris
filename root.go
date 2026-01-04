@@ -1,8 +1,6 @@
 package mpris
 
 import (
-	"fmt"
-
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/prop"
 )
@@ -15,12 +13,13 @@ type MediaPlayer2 struct {
 }
 
 func (m *MediaPlayer2) properties() map[string]*prop.Prop {
+
 	return map[string]*prop.Prop{
-		"CanQuit":      newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanQuit
-		"CanRaise":     newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
-		"HasTrackList": newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
-		"Identity":     newProp(fmt.Sprintf("MPD on %s", m.Instance.mpd.Address), nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
-		"DesktopEntry": newProp("mpd-mpris", nil),                                      // doesn't actually exist
+		"CanQuit":      newProp(false, nil),         // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanQuit
+		"CanRaise":     newProp(false, nil),         // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
+		"HasTrackList": newProp(false, nil),         // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
+		"Identity":     newProp(m.displayName, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
+		"DesktopEntry": newProp("mpd-mpris", nil),   // doesn't actually exist
 
 		"Fullscreen":       newProp(false, nil),
 		"CanSetFullscreen": newProp(false, nil),
