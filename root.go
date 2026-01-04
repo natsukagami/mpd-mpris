@@ -20,6 +20,11 @@ func (m *MediaPlayer2) properties() map[string]*prop.Prop {
 		"CanRaise":     newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:CanRaise
 		"HasTrackList": newProp(false, nil),                                            // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:HasTrackList
 		"Identity":     newProp(fmt.Sprintf("MPD on %s", m.Instance.mpd.Address), nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:Identity
+		"DesktopEntry": newProp("mpd-mpris", nil),                                      // doesn't actually exist
+
+		"Fullscreen":       newProp(false, nil),
+		"CanSetFullscreen": newProp(false, nil),
+
 		// Empty because we can't add arbitary files in...
 		"SupportedUriSchemes": newProp([]string{}, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedUriSchemes
 		"SupportedMimeTypes":  newProp([]string{}, nil), // https://specifications.freedesktop.org/mpris-spec/latest/Media_Player.html#Property:SupportedMimeTypes
