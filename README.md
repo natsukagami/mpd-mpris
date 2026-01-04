@@ -41,6 +41,10 @@ rc-update add mpd-mpris default
 ### For Nix users
 
 The repository provides the `mpd-mpris` package, overlay and a NixOS/`home-manager` module (`services.mpd-mpris`) as a flake.
+
+
+> [!CAUTION]
+> If you are using `home-manager` **23.05 or later**, there is already an existing module for `mpd-mpris`! Importing the home-manager module from here  will break your installation. Simply follow the [`home-manager` module documentation](https://nix-community.github.io/home-manager/options.xhtml#opt-services.mpd-mpris.enable) instead of this module. You may still use the upstream module (this one) for NixOS itself.
 ```
 # nix flake show github:natsukagami/mpd-mpris
 github:natsukagami/mpd-mpris
