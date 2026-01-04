@@ -25,6 +25,8 @@ var (
 
 	noInstance bool
 	instance   string
+
+	isLocal = false
 )
 
 func init() {
@@ -84,11 +86,12 @@ func main() {
 		env_host := os.Getenv("MPD_HOST")
 		if len(env_host) == 0 {
 			addr = "localhost"
+			isLocal = true
 			detectLocalSocket()
 		} else {
 			// When looking for the password delimiter, ignore the first character.
 			// An '@' sign at the start of the envvar signifies an "abstract socket" without password.
-			if strings.Index(env_host[1:], "@") > -1 {
+			if strings.Contains(env_host[1:], "@") {
 				addr_pwd := strings.SplitN(env_host, "@", 2)
 				// allow providing an alternative password on the command line
 				if len(password) == 0 {
@@ -101,7 +104,10 @@ func main() {
 			// Check if addr refers to a path or abstract socket name and change network accordingly.
 			if strings.HasPrefix(addr, "/") || strings.HasPrefix(addr, "@") {
 				network = "unix"
+				isLocal = true
 			}
+			// very crude way to find out if we have a local connection
+			isLocal = isLocal || strings.Contains(env_host, "localhost") || strings.Contains(env_host, "127.0.0.1") || strings.Contains(env_host, "/::1")
 		}
 	}
 
@@ -130,7 +136,9 @@ func main() {
 		log.Fatalf("Cannot connect to mpd: %+v", err)
 	}
 
-	opts := []mpris.Option{}
+	opts := []mpris.Option{
+		mpris.IsLocal(isLocal),
+	}
 	if noInstance && instance != "" {
 		log.Fatalln("-no-instance cannot be used with -instance-name")
 	}

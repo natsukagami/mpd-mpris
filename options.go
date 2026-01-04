@@ -18,3 +18,11 @@ func InstanceName(name string) Option {
 		ins.name = fmt.Sprintf("org.mpris.MediaPlayer2.mpd.%s", name)
 	}
 }
+
+func IsLocal(isLocal bool) Option {
+	return func(ins *Instance) {
+		if isLocal {
+			ins.displayName = "MPD"
+		}
+	}
+}
