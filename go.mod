@@ -1,6 +1,6 @@
 module github.com/natsukagami/mpd-mpris
 
-go 1.12
+go 1.18
 
 require (
 	github.com/fhs/gompd/v2 v2.3.0

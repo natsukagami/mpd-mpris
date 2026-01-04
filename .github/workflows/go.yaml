@@ -1,0 +1,17 @@
+name: build go
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: setup go
+      uses: actions/setup-go@v5
+    - name: Build
+      run: go build -v ./cmd/mpd-mpris/main.go
