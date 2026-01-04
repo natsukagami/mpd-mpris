@@ -43,6 +43,21 @@ func (i *Instance) IntrospectNode() *introspect.Node {
 						Type:   "as",
 						Access: "read",
 					},
+					{
+						Name:   "Fullscreen",
+						Type:   "b",
+						Access: "read",
+					},
+					{
+						Name:   "CanSetFullscreen",
+						Type:   "b",
+						Access: "read",
+					},
+					{
+						Name:   "DesktopEntry",
+						Type:   "s",
+						Access: "read",
+					},
 				},
 				Methods: []introspect.Method{
 					introspect.Method{
