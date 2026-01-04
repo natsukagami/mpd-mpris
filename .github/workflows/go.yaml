@@ -14,6 +14,6 @@ jobs:
     - name: setup go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.12'
+        go-version: '1.18.x'
     - name: Build
       run: go build -v ./cmd/mpd-mpris/main.go
