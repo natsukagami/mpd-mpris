@@ -14,6 +14,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Beyond this minimum, we trigger a Seeked signal.
+const seekTriggerMinimum time.Duration = time.Second * 2
+
 // This file implements a struct that satisfies the `org.mpris.MediaPlayer2.Player` interface.
 
 // Player is a DBus object satisfying the `org.mpris.MediaPlayer2.Player` interface.
@@ -184,8 +187,12 @@ func (s *Status) Update(p *Player) *dbus.Error {
 	}
 
 	if s.Seek != status.Seek {
+		if s.Seek-status.Seek > seekTriggerMinimum || status.Seek-s.Seek > seekTriggerMinimum {
+			go p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), UsFromDuration(status.Seek))
+		} else {
+			go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
+		}
 		s.Seek = status.Seek
-		go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
 	}
 	return nil
 }
@@ -409,13 +416,14 @@ func (p *Player) Seek(x TimeInUs) *dbus.Error {
 	if err != nil {
 		return p.transformErr(err)
 	}
-	if status.Seek+x.Duration() < 0 {
-		return p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), 0)
-	}
 	if status.Seek+x.Duration() > song.Duration {
 		return p.Next()
 	}
-	return p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), UsFromDuration(status.Seek+x.Duration()))
+	seekTo := UsFromDuration(status.Seek + x.Duration())
+	if status.Seek+x.Duration() < 0 {
+		seekTo = 0
+	}
+	return p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), seekTo)
 }
 
 // SetPosition sets the current track position in microseconds.
