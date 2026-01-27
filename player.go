@@ -187,7 +187,7 @@ func (s *Status) Update(p *Player) *dbus.Error {
 	}
 
 	if s.Seek != status.Seek {
-		if s.Seek-status.Seek > seekTriggerMinimum || status.Seek-s.Seek > seekTriggerMinimum {
+		if absDuration(s.Seek-status.Seek) > seekTriggerMinimum {
 			go p.Seeked(UsFromDuration(status.Seek))
 		} else {
 			go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
@@ -195,6 +195,15 @@ func (s *Status) Update(p *Player) *dbus.Error {
 		s.Seek = status.Seek
 	}
 	return nil
+}
+
+// Absolute value of a time.Duration.
+func absDuration(d time.Duration) time.Duration {
+	if d < 0 {
+		return -d
+	} else {
+		return d
+	}
 }
 
 func notImplemented(c *prop.Change) *dbus.Error {
