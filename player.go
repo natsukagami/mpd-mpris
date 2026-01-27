@@ -188,7 +188,7 @@ func (s *Status) Update(p *Player) *dbus.Error {
 
 	if s.Seek != status.Seek {
 		if s.Seek-status.Seek > seekTriggerMinimum || status.Seek-s.Seek > seekTriggerMinimum {
-			go p.SetPosition(TrackID(fmt.Sprintf(TrackIDFormat, status.Song)), UsFromDuration(status.Seek))
+			go p.Seeked(UsFromDuration(status.Seek))
 		} else {
 			go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
 		}
@@ -450,5 +450,10 @@ func (p *Player) SetPosition(o TrackID, x TimeInUs) *dbus.Error {
 		return err
 	}
 	// Unnatural seek, create signal
+	return p.Seeked(x)
+}
+
+// Emit the Seeked DBus signal.
+func (p *Player) Seeked(x TimeInUs) *dbus.Error {
 	return p.transformErr(p.dbus.Emit("/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player.Seeked", x))
 }
