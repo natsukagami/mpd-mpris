@@ -2,7 +2,7 @@
 buildGoModule (attrs: {
   name = "mpd-mpris";
   src = ./..;
-  vendorHash = "sha256-V0ogN36WgtWaEBo7DDmXusNuLBYmkB3CRHIqxQa2gDU=";
+  vendorHash = "sha256-ugJEw02jSsfObljDaup31zoQlf2HvwDRUljD7lp7Ys4=";
   # vendorHash = lib.fakeHash;
 
   postInstall = ''
