@@ -164,7 +164,7 @@ func main() {
 	log.Println("mpd-mpris running")
 
 	if err := instance.Start(ctx); err != nil {
-		log.Printf("Error: %+v", err)
+		log.Fatalf("Error: %+v", err)
 	} else {
 		log.Println("mpd-mpris stopping")
 	}
