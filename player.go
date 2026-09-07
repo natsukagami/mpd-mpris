@@ -125,8 +125,24 @@ func (p *Player) pollSeek(ctx context.Context) {
 // ============================================================================
 
 func (p *Player) setProp(iface, name string, value dbus.Variant) {
+	p.clearMetadataProp(iface, name)
 	if err := p.Instance.props.Set(iface, name, value); err != nil {
 		log.Printf("Setting %s %s failed: %+v\n", iface, name, errors.WithStack(err))
+	}
+}
+
+func (p *Player) clearMetadataProp(iface, name string) {
+	if iface != "org.mpris.MediaPlayer2.Player" || name != "Metadata" {
+		return
+	}
+
+	// godbus stores map updates into the existing map, leaving absent keys behind.
+	metadata, ok := p.Instance.props.GetMust(iface, name).(MetadataMap)
+	if !ok {
+		return
+	}
+	for key := range metadata {
+		delete(metadata, key)
 	}
 }
 
