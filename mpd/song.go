@@ -53,6 +53,12 @@ func (s *Song) SameAs(other *Song) bool {
 
 // SongFromAttrs returns a song from the attributes map.
 func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
+	return c.songFromAttrs(attr, nil)
+}
+
+// songFromAttrs is SongFromAttrs. With prev, the song it replaces when that
+// was the same stream, the album art isn't loaded again: it is kept.
+func (c *Client) songFromAttrs(attr mpd.Attrs, prev *Song) (s Song, err error) {
 	if s.ID, err = strconv.Atoi(attr["Id"]); err != nil {
 		s.ID = -1
 		return s, nil
@@ -64,6 +70,11 @@ func (c *Client) SongFromAttrs(attr mpd.Attrs) (s Song, err error) {
 	// Attempt to load the album art.
 	albumArtLock.Lock()
 	defer albumArtLock.Unlock()
+
+	if prev != nil {
+		s.albumArt = prev.albumArt
+		return
+	}
 
 	if albumArtURI != "" {
 		// delete the old album art file
