@@ -73,7 +73,7 @@ func (c *Client) CurrentSong() (Song, error) {
 
 	// Nasty hack: if duration is 0: we have an audio stream. The song can change,
 	// but its path won't. So we update anyways because we cannot be sure of the change!
-	var prev *Song
+	var copyAlbumArtFrom *Song
 	if c.lastSong != nil && c.lastSong.Path() == a["file"] {
 		if c.lastSong.Duration > 0 {
 			// Heuristically, we have... the same song...
@@ -82,9 +82,9 @@ func (c *Client) CurrentSong() (Song, error) {
 		// The same stream: read its tags again, but keep its album art. Loading
 		// it makes MPD open the stream and probe it, which can hold every MPD
 		// client for seconds, and this runs on every play, pause and stop.
-		prev = c.lastSong
+		copyAlbumArtFrom = c.lastSong
 	}
-	song, err := c.songFromAttrs(a, prev)
+	song, err := c.songFromAttrs(a, copyAlbumArtFrom)
 	if err != nil {
 		return Song{}, err
 	}
