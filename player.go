@@ -104,6 +104,11 @@ func (s *Status) updateSeek(p *Player) {
 	defer s.mu.Unlock()
 	if s.PlaybackStatus == PlaybackStatusPlaying {
 		s.Seek += time.Second
+		// Don't let the optimistic ticker run past the track's own end; mpd hasn't
+		// advanced yet, so reporting a position beyond the length is spurious.
+		if s.CurrentSong.Duration > 0 && s.Seek > s.CurrentSong.Duration {
+			s.Seek = s.CurrentSong.Duration
+		}
 		go p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(s.Seek)))
 	}
 }
@@ -177,6 +182,12 @@ func (s *Status) Update(p *Player) *dbus.Error {
 	}
 	if !song.SameAs(&s.CurrentSong) {
 		s.CurrentSong = song
+		// On a track change, reset Position *before* publishing the new Metadata so
+		// a polling client can never observe the new track's length paired with the
+		// previous track's (larger) position. Adopting status.Seek here also stops
+		// the seek block below from emitting a spurious Seeked for the same change.
+		s.Seek = status.Seek
+		p.setProp("org.mpris.MediaPlayer2.Player", "Position", dbus.MakeVariant(UsFromDuration(status.Seek)))
 		go p.setProp("org.mpris.MediaPlayer2.Player", "Metadata", dbus.MakeVariant(MapFromSong(song)))
 	}
 
