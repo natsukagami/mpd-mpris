@@ -1,14 +1,14 @@
 #!/sbin/openrc-run
 
+: ${MPD_HOST:=localhost}
+
 description="mpd-mpris: An implementation of the MPRIS protocol for MPD"
 
 command="/usr/local/bin/mpd-mpris"
-command_args="-no-instance"
+command_args="-no-instance -host=${MPD_HOST}"
+command_background=1
 
 depend() {
-  after mpd
-}
-
-start() {
-  $command $command_args &
+  [ ${MPD_HOST} = "localhost" ] && need mpd
+  need dbus
 }
