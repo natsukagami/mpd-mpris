@@ -7,5 +7,6 @@ command_args="-no-instance"
 command_background=1
 
 depend() {
+  need dbus
   after mpd
 }
