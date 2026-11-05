@@ -24,15 +24,14 @@ The [mpd-mpris](https://archlinux.org/packages/extra/x86_64/mpd-mpris/) package 
 
 ### Autostart
 
-Service files are provided for both the Systemd and OpenRC init systems. To
-enable the Systemd service run:
+Service files are provided for both the Systemd and OpenRC init systems.
 
+To enable the Systemd service run:
 ```sh
 systemctl --user --now enable mpd-mpris
 ```
 
 To run the OpenRC service, copy services/mpd-mpris to /etc/init.d and run:
-
 ```sh
 rc-update add mpd-mpris default
 ```
