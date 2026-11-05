@@ -14,7 +14,7 @@ An implementation of the [MPRIS](https://specifications.freedesktop.org/mpris-sp
 
 Probably needs Go v1.9 or newer.
 
-```bash
+```sh
 go install github.com/natsukagami/mpd-mpris/cmd/mpd-mpris
 ```
 
@@ -27,13 +27,13 @@ The [mpd-mpris](https://archlinux.org/packages/extra/x86_64/mpd-mpris/) package 
 Service files are provided for both the Systemd and OpenRC init systems. To
 enable the Systemd service run:
 
-```bash
+```sh
 systemctl --user --now enable mpd-mpris
 ```
 
 To run the OpenRC service, copy services/mpd-mpris to /etc/init.d and run:
 
-```bash
+```sh
 rc-update add mpd-mpris default
 ```
 
